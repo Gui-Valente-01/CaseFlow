@@ -1,4 +1,5 @@
 import type { CaseMessageItem } from "@/lib/queries";
+import { MessageRealtimeListener } from "@/components/MessageRealtimeListener";
 import { SubmitButton } from "@/components/SubmitButton";
 
 type MessageAction = (formData: FormData) => void | Promise<void>;
@@ -33,6 +34,7 @@ export function MessageThread({
 
   return (
     <article className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <MessageRealtimeListener caseId={caseId} />
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2">

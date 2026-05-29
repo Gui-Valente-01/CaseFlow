@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { InactivityWatcher } from "@/components/InactivityWatcher";
 
 export const metadata: Metadata = {
   title: "Portal do cliente",
@@ -9,5 +10,10 @@ export const metadata: Metadata = {
 export default function ClienteLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  return children;
+  return (
+    <>
+      {children}
+      <InactivityWatcher timeoutMinutes={15} redirectTo="/cliente/acesso" />
+    </>
+  );
 }

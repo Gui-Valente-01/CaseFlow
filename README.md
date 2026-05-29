@@ -89,6 +89,9 @@ no mesmo SQL Editor. Hoje há:
 - `docs/migration-v2-client-portal.sql`
 - `docs/migration-v3-storage.sql`
 - `docs/migration-v4-private-notes.sql`
+- `docs/migration-v5-document-rejection-reason.sql`
+- `docs/migration-v6-agenda-notifications.sql`
+- `docs/migration-v7-realtime-messages.sql`
 
 ### Plano de RLS para produção
 
