@@ -5,6 +5,7 @@ import { useState } from "react";
 import PasswordInput from "@/components/PasswordInput";
 import TextInput from "@/components/TextInput";
 import { LogoMark } from "@/components/Logo";
+import { maskDocument } from "@/lib/document";
 import { supabase } from "@/lib/supabase";
 import { resolveClientLoginAction } from "./actions";
 
@@ -96,13 +97,13 @@ export default function ClienteAcessoPage() {
             }
           }}
         >
-          <TextInput 
+          <TextInput
             label="CPF ou CNPJ"
             name="document"
             value={docInput}
-            onChange={setDocInput}
+            onChange={(v) => setDocInput(maskDocument(v))}
             autoComplete="username"
-            placeholder="Pode usar pontos e traços ou só números"
+            placeholder="000.000.000-00 ou 00.000.000/0000-00"
           />
           <PasswordInput 
             label="Senha"

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useActionState, useState } from "react";
+import DocumentInput from "@/components/DocumentInput";
 import {
   createClientAction,
   updateClientAction,
@@ -70,11 +71,11 @@ export function ClientForm({ mode, initial }: Props) {
             placeholder="(11) 90000-0000"
           />
         </div>
-        <F 
+        <DocumentInput
           label="CPF / CNPJ"
           name="document"
-          defaultValue={initial?.document}
-          placeholder="Apenas números ou com máscara"
+          defaultValue={initial?.document ?? ""}
+          placeholder="000.000.000-00 ou 00.000.000/0000-00"
           hint="Será usado pelo cliente no login do portal."
         />
 

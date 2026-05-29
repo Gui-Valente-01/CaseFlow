@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import TextInput from "@/components/TextInput";
 import { LogoMark } from "@/components/Logo";
+import { maskDocument } from "@/lib/document";
 import { supabase } from "@/lib/supabase";
 import { resolveResetEmailAction } from "./actions";
 
@@ -111,11 +112,16 @@ export default function EsqueciSenhaPage() {
             }
           }}
         >
-          <TextInput 
+          <TextInput
             label="CPF/CNPJ ou e-mail"
             name="identifier"
             value={identifier}
-            onChange={setIdentifier}
+            onChange={(v) =>
+              setIdentifier(
+                // Só aplica máscara se NÃO parecer e-mail; assim "voce@..." passa cru.
+                /[a-zA-Z@]/.test(v) ? v : maskDocument(v)
+              )
+            }
             autoComplete="username"
             placeholder="Ex.: 000.000.000-00 ou voce@escritorio.com"
           />

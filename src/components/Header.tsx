@@ -15,8 +15,7 @@ export async function Header({ title, subtitle, actionLabel, actionHref }: Props
   const orgName = profile
     ? Array.isArray(profile.organizations)
       ? profile.organizations[0]?.name
-      : // @ts-expect-error supabase devolve dinâmico
-        profile.organizations?.name
+      : profile.organizations?.name
     : undefined;
 
   return (

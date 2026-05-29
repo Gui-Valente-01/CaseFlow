@@ -1,15 +1,12 @@
 "use server";
 
+import { onlyDigits } from "@/lib/document";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 
 export interface ResolveEmailResult {
   ok: boolean;
   error?: string;
   email?: string;
-}
-
-function onlyDigits(value: string): string {
-  return value.replace(/\D/g, "");
 }
 
 /**

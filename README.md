@@ -122,11 +122,30 @@ o arquivo traz um checklist no fim.
 ## Comandos úteis
 
 ```bash
-npm run dev      # ambiente de desenvolvimento
-npm run build    # build de produção
-npm run start    # servir o build
-npm run lint     # ESLint
+npm run dev        # ambiente de desenvolvimento
+npm run build      # build de produção
+npm run start      # servir o build
+npm run lint       # ESLint
+npm run gen:types  # regenera src/lib/database.types.ts a partir do Supabase
 ```
+
+### `gen:types` — regerar tipos quando o schema mudar
+
+Sempre que você aplicar uma migration (criar/alterar coluna, criar tabela),
+rode `npm run gen:types` para atualizar `src/lib/database.types.ts`. Isso
+mantém a tipagem das queries em dia.
+
+Antes de rodar:
+
+1. Crie um Personal Access Token em
+   [supabase.com/dashboard/account/tokens](https://supabase.com/dashboard/account/tokens).
+2. Exporte na sessão atual do terminal:
+   - **PowerShell:** `$env:SUPABASE_ACCESS_TOKEN = "sbp_..."`
+   - **bash:** `export SUPABASE_ACCESS_TOKEN=sbp_...`
+3. Rode `npm run gen:types`.
+
+O script (`scripts/gen-types.mjs`) escreve o arquivo em UTF-8 nativo, então
+funciona igual em PowerShell, bash e no CI sem precisar mexer no encoding.
 
 ## Convenções
 

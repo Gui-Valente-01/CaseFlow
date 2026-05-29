@@ -11,6 +11,7 @@ import {
   createSupabaseServerClient,
   getCurrentProfile,
 } from "@/lib/supabase-server";
+import { isValidDocument } from "@/lib/document";
 
 export interface ClientFormState {
   error?: string;
@@ -20,10 +21,6 @@ const MIN_PASSWORD = 8;
 
 function field(formData: FormData, name: string): string {
   return ((formData.get(name) as string | null) ?? "").trim();
-}
-
-function onlyDigits(value: string): string {
-  return value.replace(/\D/g, "");
 }
 
 export async function createClientAction(
@@ -53,10 +50,10 @@ export async function createClientAction(
     if (!email) {
       return { error: "Para definir senha, informe o e-mail do cliente." };
     }
-    if (onlyDigits(documentRaw).length < 11) {
+    if (!isValidDocument(documentRaw)) {
       return {
         error:
-          "Para definir senha, informe um CPF/CNPJ válido (será usado no login).",
+          "CPF/CNPJ inválido. Confira o número antes de definir a senha — é o login do cliente.",
       };
     }
     const provisioned = await provisionClientAuth({
@@ -129,10 +126,10 @@ export async function updateClientAction(
     if (!email) {
       return { error: "Para definir senha, informe o e-mail do cliente." };
     }
-    if (onlyDigits(documentRaw).length < 11) {
+    if (!isValidDocument(documentRaw)) {
       return {
         error:
-          "Para definir senha, informe um CPF/CNPJ válido (será usado no login).",
+          "CPF/CNPJ inválido. Confira o número antes de definir a senha — é o login do cliente.",
       };
     }
 

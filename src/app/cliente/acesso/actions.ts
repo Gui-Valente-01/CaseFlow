@@ -1,5 +1,6 @@
 "use server";
 
+import { onlyDigits } from "@/lib/document";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 
 export interface ClientLookupResult {
@@ -7,10 +8,6 @@ export interface ClientLookupResult {
   error?: string;
   email?: string;
   profileId?: string;
-}
-
-function onlyDigits(value: string): string {
-  return value.replace(/\D/g, "");
 }
 
 /**
