@@ -1,5 +1,6 @@
 "use client";
 
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { deleteClientAction } from "../actions";
 
 interface Props {
@@ -8,22 +9,22 @@ interface Props {
 }
 
 export function DeleteClientButton({ id, name }: Props) {
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    const ok = window.confirm(
-      `Excluir o cliente "${name}" Todos os processos vinculados serão removidos também. Esta ação não pode ser desfeita.`
-    );
-    if (!ok) e.preventDefault();
+  async function handleConfirm() {
+    const formData = new FormData();
+    formData.set("id", id);
+    await deleteClientAction(formData);
   }
 
   return (
-    <form action={deleteClientAction} onSubmit={handleSubmit}>
-      <input type="hidden" name="id" value={id} />
-      <button 
-        type="submit"
-        className="inline-flex h-10 items-center justify-center rounded-lg border border-red-200 bg-white px-4 text-sm font-semibold text-red-700 transition hover:bg-red-50"
-      >
-        Excluir cliente
-      </button>
-    </form>
+    <ConfirmDialog
+      triggerLabel="Excluir cliente"
+      triggerTone="danger"
+      title={`Excluir "${name}"?`}
+      description="Todos os processos vinculados a este cliente serão removidos em cascata — atualizações, documentos, mensagens e tarefas. Esta ação não pode ser desfeita."
+      confirmLabel="Excluir definitivamente"
+      cancelLabel="Cancelar"
+      confirmWord="EXCLUIR"
+      onConfirm={handleConfirm}
+    />
   );
 }

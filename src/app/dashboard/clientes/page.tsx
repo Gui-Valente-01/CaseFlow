@@ -5,25 +5,76 @@ import { FlashBanner } from "@/components/FlashBanner";
 import { getCurrentProfile } from "@/lib/supabase-server";
 import { getClients } from "@/lib/queries";
 
-type Props = { searchParams: Promise<{ q?: string; flash?: string }> };
+const FOCUS_FILTERS = [
+  { value: "no_access", label: "Sem acesso" },
+  { value: "no_cases", label: "Sem processos" },
+  { value: "missing_data", label: "Cadastro incompleto" },
+] as const;
+
+type FocusValue = (typeof FOCUS_FILTERS)[number]["value"];
+
+type Props = {
+  searchParams: Promise<{ q?: string; focus?: string; flash?: string }>;
+};
 
 export default async function ClientesPage({ searchParams }: Props) {
   const profile = await getCurrentProfile();
   if (!profile) return null;
 
-  const { q, flash } = await searchParams;
+  const { q, focus, flash } = await searchParams;
   const search = q?.trim() ?? "";
-  const clients = await getClients(profile.organization_id, search);
+  const focusFilter: FocusValue | "" =
+    FOCUS_FILTERS.find((f) => f.value === focus)?.value ?? ("" as const);
 
-  const totals = clients.reduce(
+  const all = await getClients(profile.organization_id, search);
+
+  // Aplica o filtro de pendência em memória — escala bem para escritórios
+  // pequenos e mantém a busca server-side no banco.
+  const clients = all.filter((c) => {
+    if (focusFilter === "no_access" && c.hasAccess) return false;
+    if (focusFilter === "no_cases" && c.caseCount > 0) return false;
+    if (
+      focusFilter === "missing_data" &&
+      c.hasDocument &&
+      c.hasEmail &&
+      c.hasAccess
+    )
+      return false;
+    return true;
+  });
+
+  // Contadores baseados no resultado completo (antes do filtro de pendência),
+  // pra mostrar quantos clientes existem em cada categoria.
+  const totals = all.reduce(
     (acc, c) => {
       acc.total += 1;
       if (c.hasAccess) acc.withAccess += 1;
       if (c.caseCount > 0) acc.withCases += 1;
+      if (!c.hasAccess) acc.no_access += 1;
+      if (c.caseCount === 0) acc.no_cases += 1;
+      if (!c.hasDocument || !c.hasEmail || !c.hasAccess) acc.missing_data += 1;
       return acc;
     },
-    { total: 0, withAccess: 0, withCases: 0 }
+    {
+      total: 0,
+      withAccess: 0,
+      withCases: 0,
+      no_access: 0,
+      no_cases: 0,
+      missing_data: 0,
+    }
   );
+
+  function buildHref(next: { focus?: FocusValue | ""; q?: string }) {
+    const params = new URLSearchParams();
+    const f = next.focus ?? focusFilter;
+    const qq = next.q ?? search;
+    if (qq) params.set("q", qq);
+    if (f) params.set("focus", f);
+    return `/dashboard/clientes${params.toString() ? `?${params}` : ""}`;
+  }
+
+  const hasAnyFilter = Boolean(search) || focusFilter !== "";
 
   return (
     <>
@@ -52,41 +103,81 @@ export default async function ClientesPage({ searchParams }: Props) {
           </div>
         ) : null}
 
-        <form 
-          method="get"
-          className="mb-5 flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-white p-3 shadow-sm"
-        >
-          <input 
-            type="search"
-            name="q"
-            defaultValue={search}
-            placeholder="Buscar por nome, e-mail ou CPF/CNPJ"
-            className="h-10 min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
-          />
-          <button 
-            type="submit"
-            className="inline-flex h-10 items-center justify-center rounded-lg bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
-          >
-            Buscar
-          </button>
-          {search ? (
-            <Link 
-              href="/dashboard/clientes"
-              className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+        <div className="mb-5 rounded-lg border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
+          <form method="get" className="flex flex-wrap items-center gap-2">
+            {focusFilter ? (
+              <input type="hidden" name="focus" value={focusFilter} />
+            ) : null}
+            <input
+              type="search"
+              name="q"
+              defaultValue={search}
+              placeholder="Buscar por nome, e-mail ou CPF/CNPJ"
+              className="h-10 min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
+            />
+            <button
+              type="submit"
+              className="inline-flex h-10 shrink-0 items-center justify-center rounded-lg bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
             >
-              Limpar
-            </Link>
-          ) : null}
-        </form>
+              Buscar
+            </button>
+            {hasAnyFilter ? (
+              <Link
+                href="/dashboard/clientes"
+                className="inline-flex h-10 shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+              >
+                Limpar tudo
+              </Link>
+            ) : null}
+          </form>
+
+          <div className="mt-3">
+            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+              Pendências
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              <FilterChip
+                active={focusFilter === ""}
+                href={buildHref({ focus: "" })}
+                label="Sem filtro"
+              />
+              <FilterChip
+                active={focusFilter === "no_access"}
+                href={buildHref({ focus: "no_access" })}
+                label="Sem acesso"
+                count={totals.no_access}
+                tone="amber"
+              />
+              <FilterChip
+                active={focusFilter === "no_cases"}
+                href={buildHref({ focus: "no_cases" })}
+                label="Sem processos"
+                count={totals.no_cases}
+                tone="teal"
+              />
+              <FilterChip
+                active={focusFilter === "missing_data"}
+                href={buildHref({ focus: "missing_data" })}
+                label="Cadastro incompleto"
+                count={totals.missing_data}
+                tone="rose"
+              />
+            </div>
+          </div>
+        </div>
 
         {clients.length === 0 ? (
-          search ? (
-            <EmptyState 
+          hasAnyFilter ? (
+            <EmptyState
               title="Nenhum cliente encontrado"
-              description={`Sua busca por "${search}" não retornou resultados. Tente outro termo.`}
+              description={
+                search
+                  ? `Sua busca por "${search}" não retornou resultados com esse filtro.`
+                  : "Nenhum cliente bate com o filtro selecionado."
+              }
             />
           ) : (
-            <EmptyState 
+            <EmptyState
               title="Nenhum cliente cadastrado"
               description="Cadastre o primeiro cliente para organizar processos, documentos e mensagens em um só lugar."
               actionLabel="Cadastrar cliente"
@@ -201,10 +292,17 @@ export default async function ClientesPage({ searchParams }: Props) {
           </>
         )}
 
-        {search && clients.length > 0 ? (
+        {hasAnyFilter && clients.length > 0 ? (
           <p className="mt-3 text-xs text-slate-500">
-            {clients.length} resultado{clients.length === 1 ? "" : "s"} para{" "}
-            <span className="font-mono">&quot;{search}&quot;</span>.
+            {clients.length} cliente{clients.length === 1 ? "" : "s"}{" "}
+            encontrado{clients.length === 1 ? "" : "s"}
+            {search ? (
+              <>
+                {" "}para{" "}
+                <span className="font-mono">&quot;{search}&quot;</span>
+              </>
+            ) : null}
+            .
           </p>
         ) : null}
       </section>
@@ -282,4 +380,47 @@ function initials(name: string): string {
   if (parts.length === 0) return "?";
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function FilterChip({
+  active,
+  href,
+  label,
+  count,
+  tone,
+}: {
+  active: boolean;
+  href: string;
+  label: string;
+  count?: number;
+  tone?: "amber" | "rose" | "teal";
+}) {
+  const inactiveTone =
+    tone === "amber"
+      ? "border border-amber-200 bg-white text-amber-800 hover:bg-amber-50"
+      : tone === "rose"
+        ? "border border-rose-200 bg-white text-rose-800 hover:bg-rose-50"
+        : tone === "teal"
+          ? "border border-teal-200 bg-white text-teal-800 hover:bg-teal-50"
+          : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-100";
+
+  return (
+    <Link
+      href={href}
+      className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition ${
+        active ? "bg-slate-950 text-white shadow-sm" : inactiveTone
+      }`}
+    >
+      {label}
+      {typeof count === "number" ? (
+        <span
+          className={`inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] ${
+            active ? "bg-white/15 text-white" : "bg-slate-100 text-slate-600"
+          }`}
+        >
+          {count}
+        </span>
+      ) : null}
+    </Link>
+  );
 }

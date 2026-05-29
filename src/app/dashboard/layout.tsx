@@ -1,7 +1,16 @@
+import type { Metadata } from "next";
 import { Sidebar } from "@/components/Sidebar";
 import { isLegalStaff } from "@/lib/permissions";
 import { getCurrentProfile } from "@/lib/supabase-server";
 import { redirect } from "next/navigation";
+
+export const metadata: Metadata = {
+  title: {
+    default: "Painel",
+    template: "%s — Painel CaseFlow",
+  },
+  robots: { index: false, follow: false },
+};
 
 export default async function DashboardLayout({
   children,
