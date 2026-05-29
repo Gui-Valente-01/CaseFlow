@@ -133,7 +133,7 @@ export function InactivityWatcher({
   return (
     <div
       role="alert"
-      className="pointer-events-auto fixed inset-x-0 bottom-4 z-50 mx-auto flex w-full max-w-md flex-col gap-3 rounded-2xl border border-amber-300 bg-white p-4 shadow-xl"
+      className="no-print pointer-events-auto fixed inset-x-0 bottom-4 z-50 mx-auto flex w-full max-w-md flex-col gap-3 rounded-2xl border border-amber-300 bg-white p-4 shadow-xl"
     >
       <div className="flex items-start gap-3">
         <span

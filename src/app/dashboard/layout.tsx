@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { CommandPalette } from "@/components/CommandPalette";
 import { InactivityWatcher } from "@/components/InactivityWatcher";
 import { Sidebar } from "@/components/Sidebar";
 import { isLegalStaff } from "@/lib/permissions";
@@ -26,6 +27,7 @@ export default async function DashboardLayout({
       <Sidebar />
       <div className="flex-1">{children}</div>
       <InactivityWatcher timeoutMinutes={60} redirectTo="/login" />
+      <CommandPalette />
     </div>
   );
 }

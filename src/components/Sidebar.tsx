@@ -18,7 +18,7 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="border-b border-slate-200 bg-slate-950 text-white lg:min-h-screen lg:w-64 lg:border-b-0 lg:border-r lg:border-slate-800">
+    <aside className="no-print border-b border-slate-200 bg-slate-950 text-white lg:min-h-screen lg:w-64 lg:border-b-0 lg:border-r lg:border-slate-800">
       <div className="px-5 py-5 lg:px-6">
         <Link href="/" className="block">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-teal-300">

@@ -24,3 +24,27 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* =====================================================================
+ * Modo impressão — usado em rotas /imprimir.
+ * Esconde elementos com .no-print, força quebra de página em .page-break,
+ * remove cores de fundo pesadas e usa tipografia serifada padrão jurídica.
+ * ===================================================================== */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .page-break {
+    break-before: page;
+  }
+  body {
+    background: white !important;
+    color: black !important;
+    font-family: "Times New Roman", Georgia, serif;
+    font-size: 11pt;
+  }
+  @page {
+    margin: 2cm 1.8cm;
+  }
+}
+

@@ -242,7 +242,14 @@ function CaseHero({
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <StatusBadge status={c.status} label={c.statusLabel} />
-            <Link 
+            <Link
+              href={`/dashboard/processos/${c.id}/imprimir`}
+              target="_blank"
+              className="inline-flex h-9 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
+            >
+              Imprimir / PDF
+            </Link>
+            <Link
               href="/dashboard/processos"
               className="inline-flex h-9 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
             >
