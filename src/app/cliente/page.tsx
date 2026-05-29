@@ -162,6 +162,7 @@ export default async function ClientePage() {
                   <section className="lg:col-span-1">
                     <MessageThread
                       caseId={item.id}
+                      organizationId={item.organization_id}
                       messages={item.messages}
                       currentSide="client"
                       title="Conversa com o escritório"

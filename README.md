@@ -92,6 +92,7 @@ no mesmo SQL Editor. Hoje há:
 - `docs/migration-v5-document-rejection-reason.sql`
 - `docs/migration-v6-agenda-notifications.sql`
 - `docs/migration-v7-realtime-messages.sql`
+- `docs/migration-v8-message-attachments.sql`
 
 ### Plano de RLS para produção
 

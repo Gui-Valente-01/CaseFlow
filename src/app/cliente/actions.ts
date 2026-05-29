@@ -24,6 +24,17 @@ async function canClientAccessCase(caseId: string, profileId: string) {
   return Boolean(data);
 }
 
+/** Retorna a organization_id do processo (pra validar paths de upload). */
+async function getCaseOrganizationId(caseId: string): Promise<string | null> {
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase
+    .from("cases")
+    .select("organization_id")
+    .eq("id", caseId)
+    .maybeSingle();
+  return data?.organization_id ?? null;
+}
+
 /**
  * Confirma upload de um documento pendente:
  *   - atualiza o registro em `documents` com o storage_path real
@@ -80,17 +91,35 @@ export async function createClientMessageAction(
 
   const caseId = field(formData, "case_id");
   const body = field(formData, "body");
+  const attachmentPath = field(formData, "attachment_path");
+  const attachmentName = field(formData, "attachment_name");
+  const attachmentMime = field(formData, "attachment_mime");
+  const attachmentSizeRaw = field(formData, "attachment_size");
+  const attachmentSize = attachmentSizeRaw ? Number(attachmentSizeRaw) : null;
 
-  if (!caseId || !body) return;
+  if (!caseId || (!body && !attachmentPath)) return;
   if (body.length > 1200) return;
   if (!(await canClientAccessCase(caseId, profile.id))) return;
 
+  if (attachmentPath) {
+    const orgId = await getCaseOrganizationId(caseId);
+    if (!orgId) return;
+    if (!attachmentPath.startsWith(`${orgId}/${caseId}/messages/`)) {
+      return;
+    }
+  }
+
   const supabase = await createSupabaseServerClient();
+  // Cast tático: os campos attachment_* virão dos tipos após v8 + gen:types.
   await supabase.from("messages").insert({
     case_id: caseId,
     sender_id: profile.id,
-    body,
-  });
+    body: body || "",
+    attachment_path: attachmentPath || null,
+    attachment_name: attachmentName || null,
+    attachment_mime: attachmentMime || null,
+    attachment_size: attachmentSize,
+  } as never);
 
   revalidatePath("/cliente");
   revalidatePath("/dashboard");

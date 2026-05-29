@@ -315,17 +315,35 @@ export async function createCaseMessageAction(formData: FormData): Promise<void>
 
   const caseId = field(formData, "case_id");
   const body = field(formData, "body");
+  const attachmentPath = field(formData, "attachment_path");
+  const attachmentName = field(formData, "attachment_name");
+  const attachmentMime = field(formData, "attachment_mime");
+  const attachmentSizeRaw = field(formData, "attachment_size");
+  const attachmentSize = attachmentSizeRaw ? Number(attachmentSizeRaw) : null;
 
-  if (!caseId || !body) return;
+  // Mensagem precisa ter texto OU anexo — não rejeita mensagem só com anexo.
+  if (!caseId || (!body && !attachmentPath)) return;
   if (body.length > 1200) return;
   if (!(await canAccessCase(caseId, profile.organization_id))) return;
+  if (
+    attachmentPath &&
+    !attachmentPath.startsWith(`${profile.organization_id}/${caseId}/messages/`)
+  ) {
+    // Defensivo: rejeita path montado fora do escopo permitido.
+    return;
+  }
 
   const supabase = await createSupabaseServerClient();
+  // Cast tático: os campos attachment_* virão dos tipos após v8 + gen:types.
   await supabase.from("messages").insert({
     case_id: caseId,
     sender_id: profile.id,
-    body,
-  });
+    body: body || "",
+    attachment_path: attachmentPath || null,
+    attachment_name: attachmentName || null,
+    attachment_mime: attachmentMime || null,
+    attachment_size: attachmentSize,
+  } as never);
 
   revalidatePath("/dashboard");
   revalidatePath(`/dashboard/processos/${caseId}`);

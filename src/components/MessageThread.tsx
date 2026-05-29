@@ -1,11 +1,13 @@
 import type { CaseMessageItem } from "@/lib/queries";
+import { MessageAttachmentDownload } from "@/components/MessageAttachmentDownload";
+import { MessageComposer } from "@/components/MessageComposer";
 import { MessageRealtimeListener } from "@/components/MessageRealtimeListener";
-import { SubmitButton } from "@/components/SubmitButton";
 
 type MessageAction = (formData: FormData) => void | Promise<void>;
 
 interface MessageThreadProps {
   caseId: string;
+  organizationId: string;
   messages: CaseMessageItem[];
   currentSide: "legal" | "client";
   title: string;
@@ -18,6 +20,7 @@ interface MessageThreadProps {
 
 export function MessageThread({
   caseId,
+  organizationId,
   messages,
   currentSide,
   title,
@@ -51,7 +54,9 @@ export function MessageThread({
           <span className="font-semibold text-slate-700">{messages.length}</span>{" "}
           mensagem{messages.length === 1 ? "" : "s"}
           {lastMessage ? (
-            <span className="block pt-0.5">Última: {formatDateTime(lastMessage.createdAt)}</span>
+            <span className="block pt-0.5">
+              Última: {formatDateTime(lastMessage.createdAt)}
+            </span>
           ) : null}
         </div>
       </div>
@@ -76,29 +81,13 @@ export function MessageThread({
         )}
       </div>
 
-      <form action={action} className="mt-3 rounded-xl border border-slate-200 bg-slate-50/70 p-3">
-        <input type="hidden" name="case_id" value={caseId} />
-        <label className="sr-only" htmlFor={`message-${caseId}`}>
-          Nova mensagem
-        </label>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <textarea
-            id={`message-${caseId}`}
-            name="body"
-            required
-            rows={compact ? 2 : 3}
-            maxLength={1200}
-            placeholder={placeholder}
-            className="min-h-11 flex-1 resize-y rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm leading-6 text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
-          />
-          <SubmitButton pendingLabel="Enviando..." className="h-11 px-5 shrink-0">
-            Enviar
-          </SubmitButton>
-        </div>
-        <p className="mt-2 text-[11px] leading-5 text-slate-500">
-          Esta conversa fica registrada no histórico do processo.
-        </p>
-      </form>
+      <MessageComposer
+        caseId={caseId}
+        organizationId={organizationId}
+        placeholder={placeholder}
+        action={action}
+        compact={compact}
+      />
     </article>
   );
 }
@@ -110,9 +99,14 @@ function MessageBubble({
   message: CaseMessageItem;
   fromMe: boolean;
 }) {
+  const hasAttachment = Boolean(message.attachmentPath);
+  const hasBody = Boolean(message.body && message.body.trim());
+
   return (
     <div className={`flex ${fromMe ? "justify-end" : "justify-start"}`}>
-      <div className={`flex max-w-[88%] items-end gap-2 ${fromMe ? "flex-row-reverse" : ""}`}>
+      <div
+        className={`flex max-w-[88%] items-end gap-2 ${fromMe ? "flex-row-reverse" : ""}`}
+      >
         <Avatar name={message.sender} tone={fromMe ? "slate" : "teal"} />
         <div
           className={`rounded-2xl px-4 py-2 text-sm leading-6 shadow-sm ${
@@ -125,7 +119,7 @@ function MessageBubble({
             <span className={fromMe ? "text-slate-300" : "text-slate-500"}>
               {fromMe ? "Você" : message.sender}
             </span>
-            <span className={fromMe ? "text-slate-400" : "text-slate-400"}>
+            <span className="text-slate-400">
               {formatDateTime(message.createdAt)}
             </span>
             {!fromMe && !message.readAt ? (
@@ -134,7 +128,22 @@ function MessageBubble({
               </span>
             ) : null}
           </div>
-          <p className="mt-1 whitespace-pre-wrap break-words">{message.body}</p>
+
+          {hasBody ? (
+            <p className="mt-1 whitespace-pre-wrap break-words">
+              {message.body}
+            </p>
+          ) : null}
+
+          {hasAttachment ? (
+            <AttachmentChip
+              messageId={message.id}
+              name={message.attachmentName ?? "Anexo"}
+              size={message.attachmentSize ?? null}
+              fromMe={fromMe}
+            />
+          ) : null}
+
           {fromMe ? (
             <p className="mt-1 text-right text-[11px] text-slate-400">
               {message.readAt ? "Lida" : "Enviada"}
@@ -142,6 +151,55 @@ function MessageBubble({
           ) : null}
         </div>
       </div>
+    </div>
+  );
+}
+
+function AttachmentChip({
+  messageId,
+  name,
+  size,
+  fromMe,
+}: {
+  messageId: string;
+  name: string;
+  size: number | null;
+  fromMe: boolean;
+}) {
+  return (
+    <div
+      className={`mt-2 flex items-center gap-2 rounded-lg border px-3 py-2 ${
+        fromMe
+          ? "border-slate-700 bg-slate-900"
+          : "border-slate-200 bg-slate-50"
+      }`}
+    >
+      <span aria-hidden className="text-base">
+        📎
+      </span>
+      <div className="min-w-0 flex-1">
+        <p
+          className={`truncate text-xs font-semibold ${
+            fromMe ? "text-white" : "text-slate-900"
+          }`}
+          title={name}
+        >
+          {name}
+        </p>
+        {size != null ? (
+          <p
+            className={`text-[10px] ${
+              fromMe ? "text-slate-400" : "text-slate-500"
+            }`}
+          >
+            {humanSize(size)}
+          </p>
+        ) : null}
+      </div>
+      <MessageAttachmentDownload
+        messageId={messageId}
+        tone={fromMe ? "dark" : "light"}
+      />
     </div>
   );
 }
@@ -186,4 +244,10 @@ function formatDateTime(iso: string): string {
   } catch {
     return "";
   }
+}
+
+function humanSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }

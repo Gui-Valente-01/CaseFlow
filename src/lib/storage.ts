@@ -51,3 +51,30 @@ export async function uploadDocument(params: {
   if (error) return { ok: false, error: error.message };
   return { ok: true, storagePath: path };
 }
+
+/**
+ * Upload de anexo de mensagem do chat. Mesmo bucket, path separado
+ * para distinguir de documentos formais do processo.
+ *   <organization_id>/<case_id>/messages/<timestamp>-<filename>
+ */
+export async function uploadMessageAttachment(params: {
+  file: File;
+  organizationId: string;
+  caseId: string;
+}): Promise<UploadResult> {
+  const { file, organizationId, caseId } = params;
+
+  if (file.size > MAX_FILE_SIZE) {
+    return { ok: false, error: "Arquivo grande demais (máx. 25 MB)." };
+  }
+
+  const path = `${organizationId}/${caseId}/messages/${Date.now()}-${sanitize(file.name)}`;
+  const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
+    cacheControl: "3600",
+    upsert: false,
+    contentType: file.type || undefined,
+  });
+
+  if (error) return { ok: false, error: error.message };
+  return { ok: true, storagePath: path };
+}

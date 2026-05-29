@@ -116,6 +116,7 @@ export default async function ProcessoDetailPage({
             <div id="mensagens">
               <MessageThread
                 caseId={c.id}
+                organizationId={c.organization_id}
                 messages={messages}
                 currentSide="legal"
                 title="Conversa com o cliente"

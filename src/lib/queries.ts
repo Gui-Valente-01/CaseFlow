@@ -505,15 +505,35 @@ export interface CaseMessageItem {
   senderRole: string;
   createdAt: string;
   readAt: string | null;
+  attachmentPath: string | null;
+  attachmentName: string | null;
+  attachmentMime: string | null;
+  attachmentSize: number | null;
 }
 
 export async function getCaseMessages(caseId: string): Promise<CaseMessageItem[]> {
   const supabase = await createSupabaseServerClient();
-  const { data } = await supabase
+  // Cast tático: campos attachment_* virão dos tipos após v8 + gen:types.
+  const { data: raw } = await supabase
     .from("messages")
-    .select("id, body, created_at, read_at, profiles(full_name, role)")
+    .select(
+      "id, body, created_at, read_at, attachment_path, attachment_name, attachment_mime, attachment_size, profiles(full_name, role)"
+    )
     .eq("case_id", caseId)
     .order("created_at", { ascending: true });
+  const data = raw as
+    | Array<{
+        id: string;
+        body: string;
+        created_at: string;
+        read_at: string | null;
+        attachment_path: string | null;
+        attachment_name: string | null;
+        attachment_mime: string | null;
+        attachment_size: number | null;
+        profiles: unknown;
+      }>
+    | null;
 
   return (data ?? []).map((row) => {
     const profile = extractProfile(row.profiles);
@@ -524,6 +544,10 @@ export async function getCaseMessages(caseId: string): Promise<CaseMessageItem[]
       senderRole: profile.role,
       createdAt: row.created_at,
       readAt: row.read_at,
+      attachmentPath: row.attachment_path,
+      attachmentName: row.attachment_name,
+      attachmentMime: row.attachment_mime,
+      attachmentSize: row.attachment_size,
     };
   });
 }
