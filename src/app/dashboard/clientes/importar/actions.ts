@@ -67,8 +67,7 @@ export async function bulkImportClientsAction(
     return { ok: false, error: "Todas as linhas estavam sem nome." };
   }
 
-  // internal_notes entra nos tipos após v10 + gen:types.
-  const { error } = await supabase.from("clients").insert(toInsert as never);
+  const { error } = await supabase.from("clients").insert(toInsert);
   if (error) return { ok: false, error: error.message };
 
   await recordAudit({

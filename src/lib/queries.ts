@@ -172,7 +172,6 @@ export async function getClientById(
   id: string
 ): Promise<ClientDetail | null> {
   const supabase = await createSupabaseServerClient();
-  // internal_notes entra nos tipos após v10 + gen:types.
   const { data } = await supabase
     .from("clients")
     .select(
@@ -181,7 +180,7 @@ export async function getClientById(
     .eq("id", id)
     .eq("organization_id", organizationId)
     .maybeSingle();
-  return (data as unknown) as ClientDetail | null;
+  return data;
 }
 
 export interface ClientOption {
