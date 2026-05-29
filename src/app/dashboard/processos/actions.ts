@@ -334,7 +334,6 @@ export async function createCaseMessageAction(formData: FormData): Promise<void>
   }
 
   const supabase = await createSupabaseServerClient();
-  // Cast tático: os campos attachment_* virão dos tipos após v8 + gen:types.
   await supabase.from("messages").insert({
     case_id: caseId,
     sender_id: profile.id,
@@ -343,7 +342,7 @@ export async function createCaseMessageAction(formData: FormData): Promise<void>
     attachment_name: attachmentName || null,
     attachment_mime: attachmentMime || null,
     attachment_size: attachmentSize,
-  } as never);
+  });
 
   revalidatePath("/dashboard");
   revalidatePath(`/dashboard/processos/${caseId}`);

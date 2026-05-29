@@ -513,27 +513,13 @@ export interface CaseMessageItem {
 
 export async function getCaseMessages(caseId: string): Promise<CaseMessageItem[]> {
   const supabase = await createSupabaseServerClient();
-  // Cast tático: campos attachment_* virão dos tipos após v8 + gen:types.
-  const { data: raw } = await supabase
+  const { data } = await supabase
     .from("messages")
     .select(
       "id, body, created_at, read_at, attachment_path, attachment_name, attachment_mime, attachment_size, profiles(full_name, role)"
     )
     .eq("case_id", caseId)
     .order("created_at", { ascending: true });
-  const data = raw as
-    | Array<{
-        id: string;
-        body: string;
-        created_at: string;
-        read_at: string | null;
-        attachment_path: string | null;
-        attachment_name: string | null;
-        attachment_mime: string | null;
-        attachment_size: number | null;
-        profiles: unknown;
-      }>
-    | null;
 
   return (data ?? []).map((row) => {
     const profile = extractProfile(row.profiles);

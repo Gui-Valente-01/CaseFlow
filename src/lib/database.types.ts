@@ -329,6 +329,10 @@ export type Database = {
       }
       messages: {
         Row: {
+          attachment_mime: string | null
+          attachment_name: string | null
+          attachment_path: string | null
+          attachment_size: number | null
           body: string
           case_id: string
           created_at: string
@@ -337,6 +341,10 @@ export type Database = {
           sender_id: string | null
         }
         Insert: {
+          attachment_mime?: string | null
+          attachment_name?: string | null
+          attachment_path?: string | null
+          attachment_size?: number | null
           body: string
           case_id: string
           created_at?: string
@@ -345,6 +353,10 @@ export type Database = {
           sender_id?: string | null
         }
         Update: {
+          attachment_mime?: string | null
+          attachment_name?: string | null
+          attachment_path?: string | null
+          attachment_size?: number | null
           body?: string
           case_id?: string
           created_at?: string

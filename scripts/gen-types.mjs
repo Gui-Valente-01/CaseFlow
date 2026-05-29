@@ -23,11 +23,23 @@ if (!process.env.SUPABASE_ACCESS_TOKEN) {
   process.exit(1);
 }
 
-const cli = spawn(
-  process.platform === "win32" ? "npx.cmd" : "npx",
-  ["supabase", "gen", "types", "typescript", "--project-id", projectId, "--schema", "public"],
-  { env: process.env }
-);
+const isWin = process.platform === "win32";
+const args = [
+  "supabase",
+  "gen",
+  "types",
+  "typescript",
+  "--project-id",
+  projectId,
+  "--schema",
+  "public",
+];
+
+// No Windows usamos cmd.exe /c <npx.cmd ...> em vez de shell:true pra
+// evitar o warning de deprecação DEP0190 sem perder compat.
+const cli = isWin
+  ? spawn("cmd.exe", ["/c", "npx.cmd", ...args], { env: process.env })
+  : spawn("npx", args, { env: process.env });
 
 let stdout = "";
 let stderr = "";
@@ -45,6 +57,9 @@ cli.on("close", (code) => {
     process.exit(code ?? 1);
   }
 
-  writeFileSync(outFile, stdout, "utf8");
-  console.log(`OK -> ${outFile} (${stdout.split("\n").length} linhas)`);
+  // Strip BOM se a CLI emitir UTF-8 com BOM (alguns terminais Windows).
+  const content = stdout.charCodeAt(0) === 0xfeff ? stdout.slice(1) : stdout;
+
+  writeFileSync(outFile, content, "utf8");
+  console.log(`OK -> ${outFile} (${content.split("\n").length} linhas)`);
 });

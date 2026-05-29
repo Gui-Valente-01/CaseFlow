@@ -60,17 +60,11 @@ export async function createMessageAttachmentUrlAction(
   if (!profile) return { error: "Sessão expirada." };
 
   const supabase = await createSupabaseServerClient();
-  // Cast tático: `attachment_path` virá dos tipos após v8 + gen:types.
-  const { data: rawMessage } = await supabase
+  const { data: message } = await supabase
     .from("messages")
     .select("id, case_id, attachment_path")
     .eq("id", messageId)
     .maybeSingle();
-  const message = rawMessage as {
-    id: string;
-    case_id: string;
-    attachment_path: string | null;
-  } | null;
 
   if (!message || !message.attachment_path?.trim()) {
     return { error: "Anexo não encontrado." };
