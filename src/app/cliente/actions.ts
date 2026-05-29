@@ -2,11 +2,17 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { recordAudit } from "@/lib/audit";
+import { emailNewDocument, sendEmail } from "@/lib/email";
 import { isClient } from "@/lib/permissions";
 import {
   createSupabaseServerClient,
   getCurrentProfile,
 } from "@/lib/supabase-server";
+
+function siteUrl(): string {
+  return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+}
 
 function field(formData: FormData, name: string): string {
   return ((formData.get(name) as string | null) ?? "").trim();
@@ -78,6 +84,54 @@ export async function recordClientUploadAction(
     .eq("case_id", caseId);
 
   if (error) return { error: error.message };
+
+  // Snapshot pra audit + e-mail
+  const { data: snap } = await supabase
+    .from("documents")
+    .select(
+      "name, cases!inner(organization_id, title, lawyer_id, profiles!cases_lawyer_id_fkey(email))"
+    )
+    .eq("id", documentId)
+    .maybeSingle();
+
+  const caseField = (Array.isArray(snap?.cases) ? snap?.cases[0] : snap?.cases) as
+    | {
+        organization_id?: string;
+        title?: string;
+        profiles?:
+          | { email?: string }
+          | { email?: string }[]
+          | null;
+      }
+    | undefined;
+
+  if (caseField?.organization_id) {
+    await recordAudit({
+      organizationId: caseField.organization_id,
+      actorId: profile.id,
+      actorName: profile.full_name,
+      action: "document.uploaded",
+      entityType: "document",
+      entityId: documentId,
+      entityLabel: snap?.name ?? null,
+      metadata: { by: "client" },
+    });
+  }
+
+  // Notifica o advogado responsável (silencioso se Resend desativado)
+  const lawyerProfile = (Array.isArray(caseField?.profiles)
+    ? caseField?.profiles[0]
+    : caseField?.profiles) as { email?: string } | undefined;
+  if (lawyerProfile?.email && snap?.name && caseField?.title) {
+    const caseUrl = `${siteUrl()}/dashboard/processos/${caseId}`;
+    const { subject, html, text } = emailNewDocument({
+      clientName: profile.full_name,
+      documentName: snap.name,
+      caseTitle: caseField.title,
+      caseUrl,
+    });
+    void sendEmail({ to: lawyerProfile.email, subject, html, text });
+  }
 
   revalidatePath("/cliente");
 }

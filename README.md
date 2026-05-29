@@ -70,6 +70,22 @@ inicial do cliente direto no cadastro. Detalhes em
 [`docs/SUPABASE_ADMIN_AUTH.md`](./docs/SUPABASE_ADMIN_AUTH.md). Nunca exponha
 essa chave no browser.
 
+### Notificações por e-mail (opcional)
+
+Pra ativar envio de e-mails (convite de equipe, documento aprovado/rejeitado,
+nova atualização do processo, etc.), crie conta no [Resend](https://resend.com)
+e adicione no `.env.local`:
+
+```env
+RESEND_API_KEY=re_...
+EMAIL_FROM=CaseFlow <noreply@seudominio.com>
+NEXT_PUBLIC_SITE_URL=https://seudominio.com
+```
+
+Sem `RESEND_API_KEY` o sistema continua funcionando — só não envia e-mails.
+O domínio em `EMAIL_FROM` precisa ser verificado em Resend para entregar a
+clientes que não sejam o dono da conta de teste.
+
 ### Aplicar o schema no Supabase
 
 1. Abra o projeto no Supabase.
@@ -93,6 +109,7 @@ no mesmo SQL Editor. Hoje há:
 - `docs/migration-v6-agenda-notifications.sql`
 - `docs/migration-v7-realtime-messages.sql`
 - `docs/migration-v8-message-attachments.sql`
+- `docs/migration-v9-audit-and-team.sql`
 
 ### Plano de RLS para produção
 

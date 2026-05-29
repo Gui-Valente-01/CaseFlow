@@ -33,6 +33,19 @@ export async function createSupabaseServerClient() {
 }
 
 /**
+ * Cast tático para tabelas que ainda NÃO estão em `database.types.ts`
+ * (geralmente porque a migration que as cria está pendente de aplicar
+ * no Supabase + `npm run gen:types`).
+ *
+ * Use com moderação. Quando a tabela aparecer nos tipos gerados, remova
+ * a chamada e use `supabase.from(...)` direto.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function untyped(client: Awaited<ReturnType<typeof createSupabaseServerClient>>): any {
+  return client;
+}
+
+/**
  * Retorna o profile do usuário logado (com org e role) ou null.
  */
 export async function getCurrentProfile() {

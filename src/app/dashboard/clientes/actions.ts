@@ -11,6 +11,7 @@ import {
   createSupabaseServerClient,
   getCurrentProfile,
 } from "@/lib/supabase-server";
+import { recordAudit } from "@/lib/audit";
 import { isValidDocument } from "@/lib/document";
 
 export interface ClientFormState {
@@ -67,18 +68,33 @@ export async function createClientAction(
   }
 
   const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.from("clients").insert({
-    organization_id: profile.organization_id,
-    lawyer_id: profile.id,
-    profile_id: profileId,
-    full_name,
-    email: email || null,
-    phone: field(formData, "phone") || null,
-    document: documentRaw || null,
-    notes: field(formData, "notes") || null,
-  });
+  const { data: inserted, error } = await supabase
+    .from("clients")
+    .insert({
+      organization_id: profile.organization_id,
+      lawyer_id: profile.id,
+      profile_id: profileId,
+      full_name,
+      email: email || null,
+      phone: field(formData, "phone") || null,
+      document: documentRaw || null,
+      notes: field(formData, "notes") || null,
+    })
+    .select("id")
+    .single();
 
   if (error) return { error: error.message };
+
+  await recordAudit({
+    organizationId: profile.organization_id,
+    actorId: profile.id,
+    actorName: profile.full_name,
+    action: "client.created",
+    entityType: "client",
+    entityId: inserted.id,
+    entityLabel: full_name,
+    metadata: { has_access: Boolean(profileId) },
+  });
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/clientes");
@@ -169,6 +185,17 @@ export async function updateClientAction(
 
   if (error) return { error: error.message };
 
+  await recordAudit({
+    organizationId: profile.organization_id,
+    actorId: profile.id,
+    actorName: profile.full_name,
+    action: "client.updated",
+    entityType: "client",
+    entityId: id,
+    entityLabel: full_name,
+    metadata: password ? { changed_password: true } : null,
+  });
+
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/clientes");
   revalidatePath(`/dashboard/clientes/${id}`);
@@ -184,11 +211,28 @@ export async function deleteClientAction(formData: FormData): Promise<void> {
   if (!id) return;
 
   const supabase = await createSupabaseServerClient();
+  const { data: existing } = await supabase
+    .from("clients")
+    .select("full_name")
+    .eq("id", id)
+    .eq("organization_id", profile.organization_id)
+    .maybeSingle();
+
   await supabase
     .from("clients")
     .delete()
     .eq("id", id)
     .eq("organization_id", profile.organization_id);
+
+  await recordAudit({
+    organizationId: profile.organization_id,
+    actorId: profile.id,
+    actorName: profile.full_name,
+    action: "client.deleted",
+    entityType: "client",
+    entityId: id,
+    entityLabel: existing?.full_name ?? null,
+  });
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/clientes");

@@ -2,11 +2,21 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { recordAudit } from "@/lib/audit";
+import {
+  emailCaseUpdate,
+  emailDocumentReviewed,
+  sendEmail,
+} from "@/lib/email";
 import { isLegalStaff } from "@/lib/permissions";
 import {
   createSupabaseServerClient,
   getCurrentProfile,
 } from "@/lib/supabase-server";
+
+function siteUrl(): string {
+  return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+}
 
 export interface CaseFormState {
   error?: string;
@@ -70,6 +80,17 @@ export async function createCaseAction(
 
   if (error) return { error: error.message };
 
+  await recordAudit({
+    organizationId: profile.organization_id,
+    actorId: profile.id,
+    actorName: profile.full_name,
+    action: "case.created",
+    entityType: "case",
+    entityId: data.id,
+    entityLabel: title,
+    metadata: { status, client_id },
+  });
+
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/processos");
   revalidatePath("/dashboard/clientes");
@@ -113,6 +134,17 @@ export async function updateCaseAction(
 
   if (error) return { error: error.message };
 
+  await recordAudit({
+    organizationId: profile.organization_id,
+    actorId: profile.id,
+    actorName: profile.full_name,
+    action: "case.updated",
+    entityType: "case",
+    entityId: id,
+    entityLabel: title,
+    metadata: { status },
+  });
+
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/processos");
   revalidatePath(`/dashboard/processos/${id}`);
@@ -128,11 +160,28 @@ export async function deleteCaseAction(formData: FormData): Promise<void> {
   if (!id) return;
 
   const supabase = await createSupabaseServerClient();
+  const { data: existing } = await supabase
+    .from("cases")
+    .select("title")
+    .eq("id", id)
+    .eq("organization_id", profile.organization_id)
+    .maybeSingle();
+
   await supabase
     .from("cases")
     .delete()
     .eq("id", id)
     .eq("organization_id", profile.organization_id);
+
+  await recordAudit({
+    organizationId: profile.organization_id,
+    actorId: profile.id,
+    actorName: profile.full_name,
+    action: "case.deleted",
+    entityType: "case",
+    entityId: id,
+    entityLabel: existing?.title ?? null,
+  });
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/processos");
@@ -171,8 +220,50 @@ export async function createCaseUpdateAction(formData: FormData): Promise<void> 
     description: description || null,
   });
 
+  await recordAudit({
+    organizationId: profile.organization_id,
+    actorId: profile.id,
+    actorName: profile.full_name,
+    action: "case_update.created",
+    entityType: "case",
+    entityId: caseId,
+    entityLabel: title,
+  });
+
+  // Notifica cliente por e-mail (silencioso se Resend não configurado)
+  void notifyClientOfCaseUpdate(caseId, title, description, profile.organization_id);
+
   revalidatePath("/dashboard");
   revalidatePath(`/dashboard/processos/${caseId}`);
+}
+
+async function notifyClientOfCaseUpdate(
+  caseId: string,
+  updateTitle: string,
+  updateBody: string,
+  organizationId: string
+): Promise<void> {
+  const supabase = await createSupabaseServerClient();
+  const { data: caseRow } = await supabase
+    .from("cases")
+    .select("title, clients(full_name, email, profile_id)")
+    .eq("id", caseId)
+    .eq("organization_id", organizationId)
+    .maybeSingle();
+  if (!caseRow) return;
+  const client = (Array.isArray(caseRow.clients) ? caseRow.clients[0] : caseRow.clients) as
+    | { full_name?: string; email?: string; profile_id?: string | null }
+    | undefined;
+  if (!client?.email || !client.profile_id) return;
+
+  const { subject, html, text } = emailCaseUpdate({
+    clientFirstName: (client.full_name ?? "").split(/\s+/)[0] ?? "cliente",
+    updateTitle,
+    updateBody: updateBody || undefined,
+    caseTitle: caseRow.title,
+    portalUrl: `${siteUrl()}/cliente`,
+  });
+  void sendEmail({ to: client.email, subject, html, text });
 }
 
 export async function createDocumentRequestAction(
@@ -217,6 +308,14 @@ async function setDocumentStatus(
   if (!(await canAccessCase(caseId, profile.organization_id))) return;
 
   const supabase = await createSupabaseServerClient();
+
+  // Snapshot pra usar no audit + e-mail (precisa do nome do documento e
+  // do cliente antes do update).
+  const { data: snap } = await supabase
+    .from("documents")
+    .select("name, cases(title, clients(full_name, email, profile_id))")
+    .eq("id", documentId)
+    .maybeSingle();
   await supabase
     .from("documents")
     .update({
@@ -225,6 +324,49 @@ async function setDocumentStatus(
     })
     .eq("id", documentId)
     .eq("case_id", caseId);
+
+  const actionKey =
+    next === "approved"
+      ? "document.approved"
+      : next === "rejected"
+        ? "document.rejected"
+        : "document.reopened";
+
+  await recordAudit({
+    organizationId: profile.organization_id,
+    actorId: profile.id,
+    actorName: profile.full_name,
+    action: actionKey,
+    entityType: "document",
+    entityId: documentId,
+    entityLabel: snap?.name ?? null,
+    metadata: next === "rejected" ? { reason: rejectionReason } : null,
+  });
+
+  // Notifica cliente (silencioso se Resend não configurado ou cliente sem e-mail)
+  if (next === "approved" || next === "rejected") {
+    const caseData = (Array.isArray(snap?.cases) ? snap?.cases[0] : snap?.cases) as
+      | {
+          title?: string;
+          clients?:
+            | { full_name?: string; email?: string; profile_id?: string | null }
+            | { full_name?: string; email?: string; profile_id?: string | null }[];
+        }
+      | undefined;
+    const client = (Array.isArray(caseData?.clients) ? caseData?.clients[0] : caseData?.clients) as
+      | { full_name?: string; email?: string; profile_id?: string | null }
+      | undefined;
+    if (client?.email && client.profile_id && snap?.name) {
+      const { subject, html, text } = emailDocumentReviewed({
+        clientFirstName: (client.full_name ?? "").split(/\s+/)[0] ?? "cliente",
+        documentName: snap.name,
+        approved: next === "approved",
+        reason: next === "rejected" ? rejectionReason : undefined,
+        portalUrl: `${siteUrl()}/cliente`,
+      });
+      void sendEmail({ to: client.email, subject, html, text });
+    }
+  }
 
   revalidatePath("/dashboard");
   revalidatePath(`/dashboard/processos/${caseId}`);
