@@ -110,6 +110,10 @@ no mesmo SQL Editor. Hoje há:
 - `docs/migration-v7-realtime-messages.sql`
 - `docs/migration-v8-message-attachments.sql`
 - `docs/migration-v9-audit-and-team.sql`
+- `docs/migration-v10-client-internal-notes.sql`
+- `docs/migration-v11-realtime-more.sql`
+
+Para deploy em produção, ver [`docs/DEPLOY.md`](./docs/DEPLOY.md).
 
 ### Plano de RLS para produção
 

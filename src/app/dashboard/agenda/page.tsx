@@ -37,6 +37,8 @@ export default async function AgendaPage() {
       <Header
         title="Agenda e prazos"
         subtitle="Audiências, vencimentos, reuniões e tarefas ligadas aos processos."
+        actionLabel="Ver calendário"
+        actionHref="/dashboard/agenda/calendario"
       />
 
       <section className="space-y-6 px-4 py-6 sm:px-5 lg:px-8">

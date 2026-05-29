@@ -7,9 +7,18 @@ interface Props {
   subtitle?: string;
   actionLabel?: string;
   actionHref?: string;
+  secondaryLabel?: string;
+  secondaryHref?: string;
 }
 
-export async function Header({ title, subtitle, actionLabel, actionHref }: Props) {
+export async function Header({
+  title,
+  subtitle,
+  actionLabel,
+  actionHref,
+  secondaryLabel,
+  secondaryHref,
+}: Props) {
   const profile = await getCurrentProfile();
 
   const orgName = profile
@@ -32,9 +41,17 @@ export async function Header({ title, subtitle, actionLabel, actionHref }: Props
         ) : null}
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-2">
+        {secondaryLabel && secondaryHref ? (
+          <Link
+            href={secondaryHref}
+            className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+          >
+            {secondaryLabel}
+          </Link>
+        ) : null}
         {actionLabel && actionHref ? (
-          <Link 
+          <Link
             href={actionHref}
             className="inline-flex h-10 items-center justify-center rounded-lg bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
           >

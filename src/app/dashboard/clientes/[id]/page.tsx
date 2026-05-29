@@ -120,6 +120,7 @@ export default async function ClienteDetailPage({
                     phone: client.phone ?? "",
                     document: client.document ?? "",
                     notes: client.notes ?? "",
+                    internal_notes: client.internal_notes ?? "",
                     profile_linked: hasAccess,
                   }}
                 />

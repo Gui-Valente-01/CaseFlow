@@ -30,6 +30,7 @@ import {
   updateCasePrivateNotesAction,
 } from "../actions";
 import { LawyerDocumentUploader } from "./_components/LawyerDocumentUploader";
+import { CaseRealtimeListener } from "@/components/CaseRealtimeListener";
 import { FlashBanner } from "@/components/FlashBanner";
 import { SubmitButton } from "@/components/SubmitButton";
 import {
@@ -97,6 +98,7 @@ export default async function ProcessoDetailPage({
 
       <section className="space-y-6 px-4 py-6 sm:px-5 lg:px-8">
         <FlashBanner flash={flash} />
+        <CaseRealtimeListener caseId={c.id} />
         <CaseHero
           c={c}
           stats={{

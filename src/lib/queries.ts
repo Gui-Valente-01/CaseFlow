@@ -161,6 +161,7 @@ export interface ClientDetail {
   phone: string | null;
   document: string | null;
   notes: string | null;
+  internal_notes: string | null;
   invite_token: string | null;
   profile_id: string | null;
   created_at: string | null;
@@ -171,15 +172,16 @@ export async function getClientById(
   id: string
 ): Promise<ClientDetail | null> {
   const supabase = await createSupabaseServerClient();
+  // internal_notes entra nos tipos após v10 + gen:types.
   const { data } = await supabase
     .from("clients")
     .select(
-      "id, full_name, email, phone, document, notes, invite_token, profile_id, created_at"
+      "id, full_name, email, phone, document, notes, internal_notes, invite_token, profile_id, created_at"
     )
     .eq("id", id)
     .eq("organization_id", organizationId)
     .maybeSingle();
-  return data;
+  return (data as unknown) as ClientDetail | null;
 }
 
 export interface ClientOption {
@@ -539,6 +541,148 @@ export async function getCaseMessages(caseId: string): Promise<CaseMessageItem[]
 }
 
 // =====================================================================
+// Dashboard - métricas (últimos 6 meses + tempos médios)
+// =====================================================================
+
+export interface MonthlyCount {
+  /** ISO YYYY-MM */
+  ym: string;
+  label: string;
+  count: number;
+}
+
+export interface DashboardMetrics {
+  casesByMonth: MonthlyCount[];
+  clientsByMonth: MonthlyCount[];
+  /** Em horas (média entre upload do cliente e aprovação). null se sem dados. */
+  avgApprovalHours: number | null;
+  /** Em horas (entre solicitação e upload do cliente). */
+  avgUploadHours: number | null;
+}
+
+export async function getDashboardMetrics(
+  organizationId: string
+): Promise<DashboardMetrics> {
+  const supabase = await createSupabaseServerClient();
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+  sixMonthsAgo.setDate(1);
+  sixMonthsAgo.setHours(0, 0, 0, 0);
+  const since = sixMonthsAgo.toISOString();
+
+  const [casesRes, clientsRes, docsRes] = await Promise.all([
+    supabase
+      .from("cases")
+      .select("created_at")
+      .eq("organization_id", organizationId)
+      .gte("created_at", since),
+    supabase
+      .from("clients")
+      .select("created_at")
+      .eq("organization_id", organizationId)
+      .gte("created_at", since),
+    supabase
+      .from("documents")
+      .select("created_at, updated_at, status, cases!inner(organization_id)")
+      .eq("cases.organization_id", organizationId)
+      .in("status", ["received", "approved"]),
+  ]);
+
+  const months = buildLastSixMonths();
+  const casesByMonth = countByMonth(months, (casesRes.data ?? []).map((r) => r.created_at));
+  const clientsByMonth = countByMonth(
+    months,
+    (clientsRes.data ?? []).map((r) => r.created_at)
+  );
+
+  // avgApprovalHours: status=approved -> hours entre created_at e updated_at.
+  // Como o `updated_at` se refere ao último update do documento, usamos
+  // como proxy do momento da aprovação. Aproximado, mas útil.
+  const approved = (docsRes.data ?? []).filter(
+    (d) => (d as { status: string }).status === "approved"
+  );
+  const avgApprovalHours = approved.length
+    ? avgHours(
+        approved.map((d) => {
+          const r = d as { created_at: string; updated_at: string };
+          return [r.created_at, r.updated_at];
+        })
+      )
+    : null;
+
+  const received = (docsRes.data ?? []).filter(
+    (d) => (d as { status: string }).status === "received"
+  );
+  const avgUploadHours = received.length
+    ? avgHours(
+        received.map((d) => {
+          const r = d as { created_at: string; updated_at: string };
+          return [r.created_at, r.updated_at];
+        })
+      )
+    : null;
+
+  return {
+    casesByMonth,
+    clientsByMonth,
+    avgApprovalHours,
+    avgUploadHours,
+  };
+}
+
+function buildLastSixMonths(): { ym: string; label: string }[] {
+  const names = [
+    "jan",
+    "fev",
+    "mar",
+    "abr",
+    "mai",
+    "jun",
+    "jul",
+    "ago",
+    "set",
+    "out",
+    "nov",
+    "dez",
+  ];
+  const out: { ym: string; label: string }[] = [];
+  const now = new Date();
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    out.push({ ym, label: names[d.getMonth()] });
+  }
+  return out;
+}
+
+function countByMonth(
+  months: { ym: string; label: string }[],
+  isos: string[]
+): MonthlyCount[] {
+  const tally = new Map<string, number>();
+  for (const iso of isos) {
+    if (!iso) continue;
+    const d = new Date(iso);
+    const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    tally.set(ym, (tally.get(ym) ?? 0) + 1);
+  }
+  return months.map((m) => ({ ...m, count: tally.get(m.ym) ?? 0 }));
+}
+
+function avgHours(pairs: [string, string][]): number {
+  let total = 0;
+  let n = 0;
+  for (const [a, b] of pairs) {
+    const ta = new Date(a).getTime();
+    const tb = new Date(b).getTime();
+    if (!isFinite(ta) || !isFinite(tb) || tb < ta) continue;
+    total += (tb - ta) / 3_600_000;
+    n++;
+  }
+  return n === 0 ? 0 : Math.round((total / n) * 10) / 10;
+}
+
+// =====================================================================
 // Dashboard - listas recentes
 // =====================================================================
 
@@ -763,6 +907,47 @@ export async function getCaseTasks(caseId: string): Promise<CaseTaskItem[]> {
       type: row.type ?? "task",
       priority: row.priority ?? "normal",
       status: row.status ?? "open",
+      dueAt: row.due_at,
+      createdAt: row.created_at,
+    };
+  });
+}
+
+/**
+ * Tarefas dentro de um intervalo (inclusive) — usado pelo calendário.
+ */
+export async function getTasksInRange(
+  organizationId: string,
+  startIso: string,
+  endIso: string
+): Promise<CaseTaskItem[]> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("case_tasks")
+    .select(
+      "id, case_id, title, description, type, priority, status, due_at, created_at, cases!inner(title, organization_id, clients(full_name))"
+    )
+    .eq("cases.organization_id", organizationId)
+    .gte("due_at", startIso)
+    .lte("due_at", endIso)
+    .order("due_at", { ascending: true });
+
+  if (error || !data) return [];
+
+  return data.map((row) => {
+    const c = (Array.isArray(row.cases) ? row.cases[0] : row.cases) as
+      | { title?: string; clients?: unknown }
+      | undefined;
+    return {
+      id: row.id,
+      caseId: row.case_id,
+      caseTitle: c?.title ?? "—",
+      client: extractClientName(c?.clients),
+      title: row.title,
+      description: row.description ?? "",
+      type: row.type ?? "",
+      priority: row.priority,
+      status: row.status,
       dueAt: row.due_at,
       createdAt: row.created_at,
     };

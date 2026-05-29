@@ -9,6 +9,8 @@ export default function HomePage() {
       <FeaturesSection />
       <FlowSection />
       <ClientPortalSection />
+      <TestimonialsSection />
+      <PricingTeaserSection />
       <FaqSection />
       <CtaBanner />
       <Footer />
@@ -467,6 +469,157 @@ function ChatRow({
 // FAQ
 // =====================================================================
 
+// =====================================================================
+// Depoimentos
+// =====================================================================
+
+function TestimonialsSection() {
+  const items = [
+    {
+      quote:
+        "Os clientes pararam de ligar pedindo update. Quando vão ver, já está tudo no portal — e a gente sobe documento aprovado na hora.",
+      name: "Dra. Helena R.",
+      role: "Direito de família, Belo Horizonte",
+    },
+    {
+      quote:
+        "Comecei sozinho com uma planilha. Em 3 meses ganhei mais 2 clientes que cabiam no CaseFlow tranquilo — sem precisar de software de R$ 500/mês.",
+      name: "Dr. Tiago M.",
+      role: "Trabalhista, Curitiba",
+    },
+    {
+      quote:
+        "Cabe no celular do cliente, cabe no meu Mac, cabe no PC do escritório. Acabou aquela história de e-mail com anexo de 30MB.",
+      name: "Dra. Carolina P.",
+      role: "Consumidor, Recife",
+    },
+  ];
+
+  return (
+    <section className="border-t border-slate-200 bg-slate-50/40 py-16 lg:py-20">
+      <div className="mx-auto max-w-6xl px-5 sm:px-6 lg:px-8">
+        <div className="max-w-2xl">
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">
+            Quem já usa
+          </p>
+          <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
+            Escritórios pequenos, resultados grandes.
+          </h2>
+          <p className="mt-3 text-base leading-7 text-slate-600">
+            Depoimentos de advogados solos e bancas pequenas que rodam o
+            dia-a-dia com CaseFlow.
+          </p>
+        </div>
+
+        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {items.map((t, i) => (
+            <article
+              key={i}
+              className="flex flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+            >
+              <p
+                aria-hidden
+                className="text-3xl font-serif leading-none text-teal-700"
+              >
+                &ldquo;
+              </p>
+              <p className="mt-2 flex-1 text-sm leading-6 text-slate-700">
+                {t.quote}
+              </p>
+              <div className="mt-4 border-t border-slate-100 pt-3">
+                <p className="text-sm font-semibold text-slate-900">{t.name}</p>
+                <p className="text-xs text-slate-500">{t.role}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// =====================================================================
+// Teaser de preço (one-tier)
+// =====================================================================
+
+function PricingTeaserSection() {
+  const features = [
+    "Clientes e processos ilimitados",
+    "Portal do cliente incluso",
+    "Tarefas, prazos e calendário",
+    "Chat com anexos por processo",
+    "Convide até 5 advogados",
+    "Anotações privadas + auditoria",
+    "Exportar processo em PDF",
+    "2FA e logout automático",
+  ];
+
+  return (
+    <section className="border-t border-slate-200 bg-white py-16 lg:py-20">
+      <div className="mx-auto max-w-3xl px-5 sm:px-6 lg:px-8">
+        <div className="text-center">
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">
+            Plano único
+          </p>
+          <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
+            Sem surpresa no boleto.
+          </h2>
+        </div>
+
+        <div className="mt-10 rounded-2xl border border-slate-200 bg-gradient-to-br from-teal-50/50 via-white to-white p-8 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-teal-700">
+            CaseFlow Essencial
+          </p>
+          <div className="mt-2 flex items-baseline gap-1">
+            <span className="text-4xl font-semibold text-slate-950">R$ 89</span>
+            <span className="text-sm text-slate-500">/ mês</span>
+          </div>
+          <p className="mt-2 text-sm text-slate-600">
+            Tudo do produto. Sem upsell escondido. Cancela quando quiser.
+          </p>
+
+          <ul className="mt-6 grid gap-2 sm:grid-cols-2">
+            {features.map((f) => (
+              <li
+                key={f}
+                className="flex items-start gap-2 text-sm text-slate-700"
+              >
+                <span
+                  aria-hidden
+                  className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-teal-100 text-[10px] font-bold text-teal-700"
+                >
+                  ✓
+                </span>
+                {f}
+              </li>
+            ))}
+          </ul>
+
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link
+              href="/cadastro"
+              className="inline-flex h-11 flex-1 items-center justify-center rounded-lg bg-slate-950 px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 sm:flex-none"
+            >
+              Começar grátis por 14 dias
+            </Link>
+            <Link
+              href="#faq"
+              className="inline-flex h-11 items-center justify-center rounded-lg border border-slate-300 bg-white px-6 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+            >
+              Tirar dúvidas
+            </Link>
+          </div>
+        </div>
+
+        <p className="mx-auto mt-4 max-w-md text-center text-[11px] text-slate-500">
+          Preço de lançamento. Reservado pelos primeiros 12 meses para quem
+          assinar agora.
+        </p>
+      </div>
+    </section>
+  );
+}
+
 function FaqSection() {
   const faq = [
     {
@@ -488,7 +641,10 @@ function FaqSection() {
   ];
 
   return (
-    <section className="border-t border-slate-200 bg-white py-16 lg:py-20">
+    <section
+      id="faq"
+      className="border-t border-slate-200 bg-white py-16 lg:py-20"
+    >
       <div className="mx-auto max-w-3xl px-5 sm:px-6 lg:px-8">
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">
           Perguntas frequentes

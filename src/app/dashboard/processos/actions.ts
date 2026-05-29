@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { recordAudit } from "@/lib/audit";
+import { getTemplateById } from "@/lib/case-templates";
 import {
   emailCaseUpdate,
   emailDocumentReviewed,
@@ -80,6 +81,41 @@ export async function createCaseAction(
 
   if (error) return { error: error.message };
 
+  // Se veio de um template, cria documentos pendentes + tarefas sugeridas.
+  const templateId = field(formData, "template_id");
+  if (templateId) {
+    const tpl = getTemplateById(templateId);
+    if (tpl) {
+      // Documentos: cada um vira solicitação pendente.
+      if (tpl.suggestedDocuments.length > 0) {
+        await supabase.from("documents").insert(
+          tpl.suggestedDocuments.map((name) => ({
+            case_id: data.id,
+            uploaded_by: profile.id,
+            name,
+            storage_path: `pending/${data.id}/${crypto.randomUUID()}`,
+            status: "pending",
+          }))
+        );
+      }
+
+      // Tarefas: due_at relativo a hoje
+      if (tpl.suggestedTasks.length > 0) {
+        const now = Date.now();
+        const tasksToInsert = tpl.suggestedTasks.map((t) => ({
+          organization_id: profile.organization_id,
+          case_id: data.id,
+          created_by: profile.id,
+          title: t.title,
+          status: "pending" as const,
+          priority: "medium",
+          due_at: new Date(now + t.dueInDays * 86_400_000).toISOString(),
+        }));
+        await supabase.from("case_tasks").insert(tasksToInsert);
+      }
+    }
+  }
+
   await recordAudit({
     organizationId: profile.organization_id,
     actorId: profile.id,
@@ -88,7 +124,7 @@ export async function createCaseAction(
     entityType: "case",
     entityId: data.id,
     entityLabel: title,
-    metadata: { status, client_id },
+    metadata: { status, client_id, template: templateId || null },
   });
 
   revalidatePath("/dashboard");

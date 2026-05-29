@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { LogoutButton } from "@/components/LogoutButton";
 import { DocumentDownloadButton } from "@/components/DocumentDownloadButton";
+import { CaseRealtimeListener } from "@/components/CaseRealtimeListener";
 import { MessageThread } from "@/components/MessageThread";
 import { isClient } from "@/lib/permissions";
 import { getClientPortalData, type CaseDocumentItem } from "@/lib/queries";
@@ -84,10 +85,11 @@ export default async function ClientePage() {
             const totalUpdates = item.updates.length;
 
             return (
-              <article 
+              <article
                 key={item.id}
                 className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
               >
+                <CaseRealtimeListener caseId={item.id} />
                 <div className="border-b border-slate-200 bg-gradient-to-br from-slate-50 to-white p-6">
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>

@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { EmptyState } from "@/components/EmptyState";
 import { Header } from "@/components/Header";
+import { MetricsPanel } from "@/components/MetricsPanel";
 import { StatCard } from "@/components/StatCard";
 import { getCurrentProfile } from "@/lib/supabase-server";
 import {
   getCasesWithoutNextStep,
   getCasesWithNextStep,
+  getDashboardMetrics,
   getDashboardStats,
   getRecentDocumentsByStatus,
   getRecentCases,
@@ -32,6 +34,7 @@ export default async function DashboardPage() {
     casesWithoutNextStep,
     taskStats,
     upcomingTasks,
+    metrics,
   ] =
     await Promise.all([
       getDashboardStats(profile.organization_id),
@@ -45,6 +48,7 @@ export default async function DashboardPage() {
       getCasesWithoutNextStep(profile.organization_id, 5),
       getTaskStats(profile.organization_id),
       getUpcomingTasks(profile.organization_id, 5),
+      getDashboardMetrics(profile.organization_id),
     ]);
 
   const cards = [
@@ -190,6 +194,8 @@ export default async function DashboardPage() {
             <StatCard key={c.label} {...c} />
           ))}
         </div>
+
+        <MetricsPanel metrics={metrics} />
 
         <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">

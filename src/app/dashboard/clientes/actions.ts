@@ -68,6 +68,7 @@ export async function createClientAction(
   }
 
   const supabase = await createSupabaseServerClient();
+  // internal_notes entra nos tipos após v10 + gen:types.
   const { data: inserted, error } = await supabase
     .from("clients")
     .insert({
@@ -79,7 +80,8 @@ export async function createClientAction(
       phone: field(formData, "phone") || null,
       document: documentRaw || null,
       notes: field(formData, "notes") || null,
-    })
+      internal_notes: field(formData, "internal_notes") || null,
+    } as never)
     .select("id")
     .single();
 
@@ -178,8 +180,9 @@ export async function updateClientAction(
       phone: field(formData, "phone") || null,
       document: documentRaw || null,
       notes: field(formData, "notes") || null,
+      internal_notes: field(formData, "internal_notes") || null,
       profile_id: profileId,
-    })
+    } as never)
     .eq("id", id)
     .eq("organization_id", profile.organization_id);
 

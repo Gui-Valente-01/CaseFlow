@@ -16,6 +16,7 @@ interface Initial {
   phone?: string;
   document?: string;
   notes?: string;
+  internal_notes?: string;
   profile_linked?: boolean;
 }
 
@@ -83,14 +84,38 @@ export function ClientForm({ mode, initial }: Props) {
           <span className="text-sm font-medium text-slate-700">
             Observações
           </span>
-          <textarea 
+          <textarea
             name="notes"
             defaultValue={initial?.notes}
             rows={4}
-            placeholder="Notas internas, preferências de contato, etc."
+            placeholder="Notas gerais, preferências de contato, etc."
             className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
           />
         </label>
+      </section>
+
+      <section className="rounded-xl border border-amber-200 bg-amber-50/40 p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-950">
+              Anotações internas
+            </h3>
+            <p className="mt-1 text-xs leading-5 text-slate-600">
+              Estratégia, alertas, contexto — só você e a equipe veem. Nunca
+              aparece no portal do cliente.
+            </p>
+          </div>
+          <span className="inline-flex h-6 shrink-0 items-center rounded-full bg-amber-100 px-2.5 text-[11px] font-semibold text-amber-800 ring-1 ring-amber-200">
+            Privado
+          </span>
+        </div>
+        <textarea
+          name="internal_notes"
+          defaultValue={initial?.internal_notes}
+          rows={4}
+          placeholder="Ex.: cliente prefere ser contatado pela manhã. Tem histórico de inadimplência com escritório anterior."
+          className="mt-3 w-full rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm leading-6 text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-amber-500 focus:ring-4 focus:ring-amber-100"
+        />
       </section>
 
       <section className="rounded-xl border border-slate-200 bg-slate-50/60 p-5">

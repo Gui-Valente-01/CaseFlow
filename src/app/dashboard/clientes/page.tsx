@@ -78,11 +78,13 @@ export default async function ClientesPage({ searchParams }: Props) {
 
   return (
     <>
-      <Header 
+      <Header
         title="Clientes"
         subtitle="Contatos do escritório, status de acesso e processos vinculados."
         actionLabel="Novo cliente"
         actionHref="/dashboard/clientes/novo"
+        secondaryLabel="Importar CSV"
+        secondaryHref="/dashboard/clientes/importar"
       />
 
       <section className="px-4 py-6 sm:px-5 lg:px-8">
