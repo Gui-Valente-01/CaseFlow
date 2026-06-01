@@ -548,8 +548,8 @@ function PricingTeaserSection() {
     "Portal do cliente incluso",
     "Tarefas, prazos e calendário",
     "Chat com anexos por processo",
-    "Convide até 5 advogados",
-    "Anotações privadas + auditoria",
+    "Modelos de processo prontos",
+    "Anotações privadas e internas",
     "Exportar processo em PDF",
     "2FA e logout automático",
   ];
