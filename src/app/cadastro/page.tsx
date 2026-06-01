@@ -20,6 +20,7 @@ export default function CadastroPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [acceptedLegal, setAcceptedLegal] = useState(false);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
 
   const loading = status.kind === "loading";
@@ -45,6 +46,15 @@ export default function CadastroPage() {
     }
     if (password !== confirm) {
       setStatus({ kind: "error", message: "As senhas não coincidem." });
+      return;
+    }
+
+    if (!acceptedLegal) {
+      setStatus({
+        kind: "error",
+        message:
+          "Para criar sua conta, aceite os Termos de Uso e a Política de Privacidade.",
+      });
       return;
     }
 
@@ -180,6 +190,37 @@ export default function CadastroPage() {
           {confirm.length > 0 && confirm !== password ? (
             <p className="text-xs text-red-600">As senhas não coincidem.</p>
           ) : null}
+
+          <label className="flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-left">
+            <input
+              type="checkbox"
+              checked={acceptedLegal}
+              onChange={(event) => setAcceptedLegal(event.currentTarget.checked)}
+              className="mt-1 h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+            />
+            <span className="text-xs leading-5 text-slate-600">
+              Li e aceito os{" "}
+              <Link
+                href="/termos-de-uso"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-teal-700 hover:text-teal-800"
+              >
+                Termos de Uso
+              </Link>{" "}
+              e a{" "}
+              <Link
+                href="/politica-de-privacidade"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-teal-700 hover:text-teal-800"
+              >
+                Política de Privacidade
+              </Link>
+              , incluindo o tratamento de dados pessoais necessário para operar
+              o portal jurídico.
+            </span>
+          </label>
 
           {status.kind === "error" ? (
             <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm leading-6 text-red-700">

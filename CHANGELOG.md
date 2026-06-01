@@ -9,6 +9,34 @@ Versionamento [SemVer](https://semver.org/lang/pt-BR/).
 
 Mudanças que ainda não viraram release. Vai pro topo quando lançar.
 
+### Adicionado
+- Migrations `v12-rls-rpc-helpers` e `v13-production-rls-policies` para
+  preparar RLS estrito em tabelas e Storage.
+- Páginas públicas de Termos de Uso e Política de Privacidade, com links no
+  footer e aceite explícito no cadastro.
+- Tela interna de prontidão para produção, base de plano/trial e migration
+  `v14-organization-billing` para operação comercial manual.
+- Testes `npm test` e `npm run test:smoke` cobrindo páginas públicas,
+  aceite legal, migrations críticas e redirect de área protegida.
+- Enforcement de trial/assinatura no dashboard, pagina `/dashboard/assinatura`
+  e banner de fim de teste dispensavel por sessao.
+- Secao LGPD em `/dashboard/conta` para exportar dados da organizacao e excluir
+  conta/escritorio com confirmacao por senha.
+- Monitoramento de erros com `@sentry/nextjs`, configs inertes sem DSN e captura
+  no error boundary global.
+- Migration `v15-privacy-audit-log` para manter auditoria LGPD mesmo apos
+  exclusao da organizacao.
+- Base de integracao Stripe para assinatura: Checkout Session, webhook de
+  assinatura e envs separadas por ambiente test/live.
+
+### Alterado
+- Login do cliente, reset por CPF/CNPJ, upload de documento e leitura de
+  mensagens agora usam RPCs seguras com fallback para bancos ainda sem v12.
+- Aceite de convite e auditoria passam a usar service role no servidor quando
+  configurada, evitando quebra quando RLS estiver ativo.
+- Exportacao LGPD agora separa escopos: owner exporta o escritorio; lawyer
+  exporta apenas dados pessoais e atividade propria.
+
 ---
 
 ## [0.5.0] — 2026-05-28

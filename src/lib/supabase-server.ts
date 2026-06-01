@@ -41,7 +41,7 @@ export async function createSupabaseServerClient() {
  * a chamada e use `supabase.from(...)` direto.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function untyped(client: Awaited<ReturnType<typeof createSupabaseServerClient>>): any {
+export function untyped(client: unknown): any {
   return client;
 }
 

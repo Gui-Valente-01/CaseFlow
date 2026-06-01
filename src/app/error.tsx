@@ -1,5 +1,6 @@
 "use client";
 
+import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
 import Link from "next/link";
 import { LogoMark } from "@/components/Logo";
@@ -12,6 +13,10 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
+    if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
+      Sentry.captureException(error);
+    }
+
     // Log no console do navegador. Em produção, plugar num serviço de
     // observabilidade aqui (Sentry, Logflare, etc.).
     console.error("[CaseFlow] runtime error:", error);

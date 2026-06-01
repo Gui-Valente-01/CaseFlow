@@ -27,6 +27,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Unit tests
+        run: npm test
+
       # As variáveis públicas do Supabase precisam existir só pra o build
       # passar sem dar erro de env undefined. Como o build do Next compila
       # client-side com NEXT_PUBLIC_*, qualquer valor não-vazio basta —

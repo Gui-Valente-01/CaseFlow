@@ -544,6 +544,56 @@ export type Database = {
         }
         Relationships: []
       }
+      organization_billing: {
+        Row: {
+          billing_email: string | null
+          created_at: string
+          organization_id: string
+          payment_customer_id: string | null
+          payment_provider: string | null
+          payment_subscription_id: string | null
+          plan: string
+          subscription_current_period_end: string | null
+          subscription_status: string
+          trial_ends_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          billing_email?: string | null
+          created_at?: string
+          organization_id: string
+          payment_customer_id?: string | null
+          payment_provider?: string | null
+          payment_subscription_id?: string | null
+          plan?: string
+          subscription_current_period_end?: string | null
+          subscription_status?: string
+          trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          billing_email?: string | null
+          created_at?: string
+          organization_id?: string
+          payment_customer_id?: string | null
+          payment_provider?: string | null
+          payment_subscription_id?: string | null
+          plan?: string
+          subscription_current_period_end?: string | null
+          subscription_status?: string
+          trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_billing_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           cpf: string | null
@@ -599,7 +649,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      find_client_login: {
+        Args: { p_document_digits: string }
+        Returns: { email: string; profile_id: string }[]
+      }
+      find_reset_email: {
+        Args: { p_document_digits: string }
+        Returns: string
+      }
+      mark_case_messages_read: {
+        Args: { p_case_id: string }
+        Returns: number
+      }
+      mark_document_received: {
+        Args: { p_document_id: string; p_storage_path: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

@@ -25,7 +25,8 @@ interface Props {
    * confirma. Recebe o formData (vazio aqui, mas mantemos a assinatura
    * de Server Action por consistência).
    */
-  onConfirm: () => void | Promise<void>;
+  onConfirm: () => void | boolean | Promise<void | boolean>;
+  children?: React.ReactNode;
 }
 
 /**
@@ -45,6 +46,7 @@ export function ConfirmDialog({
   cancelLabel = "Cancelar",
   confirmWord,
   onConfirm,
+  children,
 }: Props) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [typed, setTyped] = useState("");
@@ -73,8 +75,8 @@ export function ConfirmDialog({
     if (!wordOk) return;
     setBusy(true);
     try {
-      await onConfirm();
-      close();
+      const shouldClose = await onConfirm();
+      if (shouldClose !== false) close();
     } finally {
       setBusy(false);
     }
@@ -101,6 +103,8 @@ export function ConfirmDialog({
         <div className="p-6">
           <h2 className="text-lg font-semibold text-slate-950">{title}</h2>
           <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
+
+          {children}
 
           {confirmWord ? (
             <label className="mt-5 block">

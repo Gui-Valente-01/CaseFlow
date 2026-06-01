@@ -6,6 +6,7 @@ import {
 } from "@/lib/supabase-server";
 import { AccountForm } from "./_components/AccountForm";
 import { PasswordForm } from "./_components/PasswordForm";
+import { PrivacyDataPanel } from "./_components/PrivacyDataPanel";
 import { TwoFactorPanel } from "./_components/TwoFactorPanel";
 
 export default async function ContaPage() {
@@ -65,6 +66,15 @@ export default async function ContaPage() {
           </p>
           <div className="mt-6">
             <TwoFactorPanel />
+          </div>
+        </article>
+
+        <article className="max-w-3xl rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+          <h2 className="text-base font-semibold text-slate-950">
+            Privacidade e dados (LGPD)
+          </h2>
+          <div className="mt-3">
+            <PrivacyDataPanel isOwner={profile.role === "owner"} />
           </div>
         </article>
       </section>

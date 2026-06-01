@@ -1,6 +1,7 @@
 "use server";
 
 import { onlyDigits } from "@/lib/document";
+import { isMissingRpc } from "@/lib/supabase-errors";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 
 export interface ResolveEmailResult {
@@ -33,6 +34,33 @@ export async function resolveResetEmailAction(
     return { ok: false, error: "Informe um CPF ou CNPJ válido." };
   }
 
+  const supabase = await createSupabaseServerClient();
+  const { data: email, error } = await supabase.rpc("find_reset_email", {
+    p_document_digits: digits,
+  });
+
+  if (isMissingRpc(error)) {
+    return resolveResetEmailFallback(digits);
+  }
+
+  if (error) {
+    return { ok: false, error: "Não foi possível consultar o cadastro." };
+  }
+
+  if (!email) {
+    return {
+      ok: false,
+      error:
+        "Não encontrei um cadastro com este CPF/CNPJ. Procure o escritório.",
+    };
+  }
+
+  return { ok: true, email: email.trim().toLowerCase() };
+}
+
+async function resolveResetEmailFallback(
+  digits: string
+): Promise<ResolveEmailResult> {
   const supabase = await createSupabaseServerClient();
   const { data: rows, error } = await supabase
     .from("clients")

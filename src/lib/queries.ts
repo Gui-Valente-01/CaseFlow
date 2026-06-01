@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from "./supabase-server";
+import { isMissingRpc } from "./supabase-errors";
 
 // =====================================================================
 // Tradução de status
@@ -487,6 +488,13 @@ export async function markCaseMessagesAsRead(
   currentUserId: string
 ): Promise<number> {
   const supabase = await createSupabaseServerClient();
+  const marked = await supabase.rpc("mark_case_messages_read", {
+    p_case_id: caseId,
+  });
+
+  if (!marked.error) return marked.data ?? 0;
+  if (!isMissingRpc(marked.error)) return 0;
+
   const { data, error } = await supabase
     .from("messages")
     .update({ read_at: new Date().toISOString() })

@@ -5,7 +5,7 @@ import {
   getSupabaseAdmin,
   isSupabaseAdminConfigured,
 } from "@/lib/supabase-admin";
-import { createSupabaseServerClient, untyped } from "@/lib/supabase-server";
+import { untyped } from "@/lib/supabase-server";
 
 export interface AcceptResult {
   ok: boolean;
@@ -49,10 +49,10 @@ export async function acceptInvitationAction(
     };
   }
 
-  const supabase = await createSupabaseServerClient();
+  const admin = getSupabaseAdmin()!;
 
   // Busca o convite — token é único, então maybeSingle.
-  const { data: invitation } = await untyped(supabase)
+  const { data: invitation } = await untyped(admin)
     .from("invitations")
     .select("id, organization_id, email, role, expires_at, accepted_at")
     .eq("token", token)
@@ -68,7 +68,6 @@ export async function acceptInvitationAction(
     return { ok: false, error: "Este convite expirou." };
   }
 
-  const admin = getSupabaseAdmin()!;
   const created = await admin.auth.admin.createUser({
     email: invitation.email,
     password,
@@ -99,14 +98,14 @@ export async function acceptInvitationAction(
   const userId = created.data.user.id;
 
   // Move o profile pra organização do convite + role do convite.
-  const { data: ghost } = await supabase
+  const { data: ghost } = await admin
     .from("profiles")
     .select("id, organization_id")
     .eq("id", userId)
     .maybeSingle();
 
   if (ghost) {
-    await supabase
+    await admin
       .from("profiles")
       .update({
         organization_id: invitation.organization_id,
@@ -120,10 +119,10 @@ export async function acceptInvitationAction(
       ghost.organization_id &&
       ghost.organization_id !== invitation.organization_id
     ) {
-      await supabase.from("organizations").delete().eq("id", ghost.organization_id);
+      await admin.from("organizations").delete().eq("id", ghost.organization_id);
     }
   } else {
-    await supabase.from("profiles").insert({
+    await admin.from("profiles").insert({
       id: userId,
       organization_id: invitation.organization_id,
       role: invitation.role,
@@ -133,7 +132,7 @@ export async function acceptInvitationAction(
   }
 
   // Marca convite como aceito
-  await untyped(supabase)
+  await untyped(admin)
     .from("invitations")
     .update({ accepted_at: new Date().toISOString(), accepted_by: userId })
     .eq("id", invitation.id);

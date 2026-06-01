@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { recordAudit } from "@/lib/audit";
 import { emailNewDocument, sendEmail } from "@/lib/email";
 import { isClient } from "@/lib/permissions";
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { isMissingRpc } from "@/lib/supabase-errors";
 import {
   createSupabaseServerClient,
   getCurrentProfile,
@@ -72,21 +74,31 @@ export async function recordClientUploadAction(
   }
 
   const supabase = await createSupabaseServerClient();
-  const { error } = await supabase
-    .from("documents")
-    .update({
-      status: "received",
-      storage_path: storagePath,
-      uploaded_by: profile.id,
-      rejection_reason: null,
-    })
-    .eq("id", documentId)
-    .eq("case_id", caseId);
+  const received = await supabase.rpc("mark_document_received", {
+    p_document_id: documentId,
+    p_storage_path: storagePath,
+  });
 
-  if (error) return { error: error.message };
+  if (isMissingRpc(received.error)) {
+    const { error } = await supabase
+      .from("documents")
+      .update({
+        status: "received",
+        storage_path: storagePath,
+        uploaded_by: profile.id,
+        rejection_reason: null,
+      })
+      .eq("id", documentId)
+      .eq("case_id", caseId);
+
+    if (error) return { error: error.message };
+  } else if (received.error) {
+    return { error: received.error.message };
+  }
 
   // Snapshot pra audit + e-mail
-  const { data: snap } = await supabase
+  const snapshotClient = getSupabaseAdmin() ?? supabase;
+  const { data: snap } = await snapshotClient
     .from("documents")
     .select(
       "name, cases!inner(organization_id, title, lawyer_id, profiles!cases_lawyer_id_fkey(email))"

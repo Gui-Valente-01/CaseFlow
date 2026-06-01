@@ -739,6 +739,12 @@ function Footer() {
           <Link href="/esqueci-senha" className="hover:text-slate-950">
             Esqueci a senha
           </Link>
+          <Link href="/termos-de-uso" className="hover:text-slate-950">
+            Termos
+          </Link>
+          <Link href="/politica-de-privacidade" className="hover:text-slate-950">
+            Privacidade
+          </Link>
         </nav>
       </div>
     </footer>

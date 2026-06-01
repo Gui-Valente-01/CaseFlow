@@ -1,6 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { recordAudit, recordPrivacyAudit } from "@/lib/audit";
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import {
   createSupabaseServerClient,
   getCurrentProfile,
@@ -9,6 +12,10 @@ import {
 export interface AccountState {
   error?: string;
   success?: boolean;
+}
+
+export interface DeleteAccountState {
+  error?: string;
 }
 
 function field(formData: FormData, name: string): string {
@@ -42,4 +49,86 @@ export async function updateAccountAction(
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/conta");
   return { success: true };
+}
+
+export async function deleteAccountAndOrganizationAction(
+  formData: FormData
+): Promise<DeleteAccountState> {
+  const profile = await getCurrentProfile();
+  if (!profile) return { error: "Sessao expirada." };
+  if (profile.role !== "owner") {
+    return { error: "Apenas o dono do escritorio pode excluir a conta." };
+  }
+
+  const password = (formData.get("password") as string | null) ?? "";
+  if (!password) return { error: "Informe sua senha para confirmar." };
+
+  const admin = getSupabaseAdmin();
+  if (!admin) {
+    return {
+      error:
+        "SUPABASE_SERVICE_ROLE_KEY nao esta configurada. Sem ela nao da para remover o usuario do Auth.",
+    };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { error: passwordError } = await supabase.auth.signInWithPassword({
+    email: profile.email,
+    password,
+  });
+
+  if (passwordError) return { error: "Senha incorreta." };
+
+  const { data: organization } = await admin
+    .from("organizations")
+    .select("name")
+    .eq("id", profile.organization_id)
+    .maybeSingle();
+
+  await recordAudit({
+    organizationId: profile.organization_id,
+    actorId: profile.id,
+    actorName: profile.full_name,
+    action: "account.deleted",
+    entityType: "organization",
+    entityId: profile.organization_id,
+    metadata: {
+      email: profile.email,
+      role: profile.role,
+    },
+  });
+
+  await recordPrivacyAudit({
+    organizationId: profile.organization_id,
+    organizationName: organization?.name ?? null,
+    actorId: profile.id,
+    actorEmail: profile.email,
+    actorName: profile.full_name,
+    action: "account.deleted",
+    scope: "organization",
+    metadata: {
+      email: profile.email,
+      role: profile.role,
+    },
+  });
+
+  const { error: organizationError } = await admin
+    .from("organizations")
+    .delete()
+    .eq("id", profile.organization_id);
+
+  if (organizationError) {
+    return { error: organizationError.message };
+  }
+
+  const { error: authError } = await admin.auth.admin.deleteUser(profile.id);
+  if (authError) {
+    return {
+      error:
+        "O escritorio foi removido, mas houve falha ao excluir o usuario do Auth. Remova manualmente no Supabase.",
+    };
+  }
+
+  await supabase.auth.signOut();
+  redirect("/");
 }

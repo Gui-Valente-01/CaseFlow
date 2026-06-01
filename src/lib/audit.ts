@@ -5,6 +5,7 @@
  * derrubam a Server Action que disparou (try/catch silencioso).
  */
 
+import { getSupabaseAdmin } from "./supabase-admin";
 import { createSupabaseServerClient, untyped } from "./supabase-server";
 
 export interface AuditInput {
@@ -15,6 +16,17 @@ export interface AuditInput {
   entityType?: string | null;
   entityId?: string | null;
   entityLabel?: string | null;
+  metadata?: Record<string, unknown> | null;
+}
+
+export interface PrivacyAuditInput {
+  organizationId: string;
+  organizationName?: string | null;
+  actorId?: string | null;
+  actorEmail?: string | null;
+  actorName?: string | null;
+  action: "data.exported" | "account.deleted";
+  scope: "personal" | "organization";
   metadata?: Record<string, unknown> | null;
 }
 
@@ -31,7 +43,7 @@ export interface AuditInput {
  */
 export async function recordAudit(input: AuditInput): Promise<void> {
   try {
-    const supabase = await createSupabaseServerClient();
+    const supabase = getSupabaseAdmin() ?? (await createSupabaseServerClient());
     // audit_log entra nos tipos após v9 + gen:types.
     await untyped(supabase).from("audit_log").insert({
       organization_id: input.organizationId,
@@ -45,6 +57,32 @@ export async function recordAudit(input: AuditInput): Promise<void> {
     });
   } catch {
     // Best-effort: nunca falha o fluxo principal.
+  }
+}
+
+/**
+ * Registra eventos LGPD em uma tabela sem FK/cascade para a organizacao.
+ * Assim o rastro de exportacao/exclusao sobrevive mesmo apos apagar a org.
+ */
+export async function recordPrivacyAudit(
+  input: PrivacyAuditInput
+): Promise<void> {
+  try {
+    const supabase = getSupabaseAdmin();
+    if (!supabase) return;
+
+    await untyped(supabase).from("privacy_audit_log").insert({
+      organization_id: input.organizationId,
+      organization_name: input.organizationName ?? null,
+      actor_id: input.actorId ?? null,
+      actor_email: input.actorEmail ?? null,
+      actor_name: input.actorName ?? null,
+      action: input.action,
+      scope: input.scope,
+      metadata: input.metadata ?? null,
+    });
+  } catch {
+    // Best-effort: nao bloqueia exportacao/exclusao por falha no log.
   }
 }
 
@@ -70,9 +108,16 @@ const ACTION_LABEL: Record<string, string> = {
   "invitation.revoked": "Convite revogado",
   "org.updated": "Dados do escritório atualizados",
   "account.updated": "Dados pessoais atualizados",
+  "account.deleted": "Conta e escritorio excluidos",
+  "data.exported": "Dados exportados",
   "mfa.enrolled": "2FA ativado",
   "mfa.disabled": "2FA desativado",
   "private_notes.updated": "Anotações internas atualizadas",
+  "billing.manual_payment": "Pagamento manual registrado",
+  "billing.checkout_started": "Checkout Stripe iniciado",
+  "billing.trial_extended": "Teste grátis configurado",
+  "billing.past_due": "Plano marcado como pendente",
+  "billing.access_blocked": "Acesso bloqueado por assinatura",
 };
 
 export function translateAuditAction(action: string): string {

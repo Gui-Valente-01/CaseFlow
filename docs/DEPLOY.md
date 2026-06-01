@@ -22,6 +22,10 @@ que aceite Node (Railway, Fly.io, AWS, etc.).
    - `docs/migration-v9-audit-and-team.sql`
    - `docs/migration-v10-client-internal-notes.sql`
    - `docs/migration-v11-realtime-more.sql`
+   - `docs/migration-v12-rls-rpc-helpers.sql`
+   - `docs/migration-v13-production-rls-policies.sql` (primeiro em staging)
+   - `docs/migration-v14-organization-billing.sql`
+   - `docs/migration-v15-privacy-audit-log.sql`
 3. Anote os valores em **Project Settings → API**:
    - `URL`
    - `anon` key
@@ -43,6 +47,19 @@ que aceite Node (Railway, Fly.io, AWS, etc.).
    | `NEXT_PUBLIC_SITE_URL` | `https://seudominio.com` | Production + Preview |
    | `RESEND_API_KEY` | `re_...` (opcional) | Production só |
    | `EMAIL_FROM` | `CaseFlow <noreply@seudominio.com>` (opcional) | Production só |
+   | `SENTRY_DSN` | DSN do projeto Sentry (opcional) | Production + Preview |
+   | `NEXT_PUBLIC_SENTRY_DSN` | Mesma DSN para erros do browser (opcional) | Production + Preview |
+   | `STRIPE_SECRET_KEY` | `rk_live_...` em producao / `rk_test_...` em staging | Production + Preview |
+   | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `pk_live_...` em producao / `pk_test_...` em staging | Production + Preview |
+   | `STRIPE_WEBHOOK_SECRET` | `whsec_...` do endpoint do ambiente | Production + Preview |
+   | `STRIPE_PRICE_ID_ESSENTIAL` | `price_...` do plano mensal | Production + Preview |
+
+   Sem `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN`, o Sentry nao envia eventos e
+   nao quebra o build.
+
+   Sem `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` ou
+   `STRIPE_PRICE_ID_ESSENTIAL`, o checkout automatico fica inerte e o pagamento
+   manual por PIX continua disponivel.
 
 4. Deixe o **framework preset** como Next.js. Não mexa em build command
    nem output directory.
@@ -53,6 +70,13 @@ Após o primeiro deploy:
 - Atualize `NEXT_PUBLIC_SITE_URL` se mudou.
 - No Supabase → **Authentication → URL Configuration**, adicione a URL
   em **Redirect URLs** para os links de recuperação de senha funcionarem.
+- No Stripe → **Developers → Webhooks**, crie um endpoint para
+  `https://seudominio.com/api/stripe/webhook` com os eventos
+  `checkout.session.completed`, `customer.subscription.updated` e
+  `customer.subscription.deleted`.
+- Para `STRIPE_SECRET_KEY`, prefira chave restrita com Checkout Sessions
+  `Write`, Customers `Write`, Prices `Read` e Subscriptions `Read`. Use uma
+  chave `rk_test_...` em staging e outra `rk_live_...` em producao.
 
 ## 3. Domínio próprio
 
@@ -83,6 +107,8 @@ Sem isso, convites de equipe e notificações por e-mail não saem.
 - [ ] Cliente loga em `/cliente/acesso` com CPF/CNPJ.
 - [ ] Upload de documento funciona (precisa bucket `documents` existir).
 - [ ] Realtime no chat funciona (precisa migrations v7 e v11).
+- [ ] RLS v13 validada em staging antes de promover para produção.
+- [ ] Storage do bucket `documents` validado com usuário advogado e cliente.
 - [ ] OG image aparece ao colar o link no WhatsApp.
 - [ ] CI no GitHub roda verde.
 

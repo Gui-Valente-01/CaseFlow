@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LogoMark } from "@/components/Logo";
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { createSupabaseServerClient, untyped } from "@/lib/supabase-server";
 import { AcceptForm } from "./_components/AcceptForm";
 
@@ -12,7 +13,7 @@ type Props = { params: Promise<{ token: string }> };
 
 export default async function AcceptInvitePage({ params }: Props) {
   const { token } = await params;
-  const supabase = await createSupabaseServerClient();
+  const supabase = getSupabaseAdmin() ?? (await createSupabaseServerClient());
 
   const { data: invitation } = await untyped(supabase)
     .from("invitations")

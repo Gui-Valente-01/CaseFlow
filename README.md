@@ -61,6 +61,12 @@ Crie um arquivo `.env.local` na raiz com:
 NEXT_PUBLIC_SUPABASE_URL=https://<seu-projeto>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key-do-supabase>
 SUPABASE_SERVICE_ROLE_KEY=<service-role-key-do-supabase>
+SENTRY_DSN=
+NEXT_PUBLIC_SENTRY_DSN=
+STRIPE_SECRET_KEY=
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+STRIPE_WEBHOOK_SECRET=
+STRIPE_PRICE_ID_ESSENTIAL=
 ```
 
 Os valores ficam em **Supabase → Project Settings → API**.
@@ -69,6 +75,31 @@ A `SUPABASE_SERVICE_ROLE_KEY` é necessária para o advogado definir a senha
 inicial do cliente direto no cadastro. Detalhes em
 [`docs/SUPABASE_ADMIN_AUTH.md`](./docs/SUPABASE_ADMIN_AUTH.md). Nunca exponha
 essa chave no browser.
+
+`SENTRY_DSN` e `NEXT_PUBLIC_SENTRY_DSN` sao opcionais. Sem DSN, o Sentry fica
+inerte em desenvolvimento e no build local. Quando for ativar monitoramento,
+configure a DSN no ambiente, nunca direto no codigo.
+
+### Stripe (opcional)
+
+Pra ativar checkout automatico de assinatura, crie um produto/preco recorrente
+no Stripe e configure:
+
+```env
+STRIPE_SECRET_KEY=rk_test_...
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_PRICE_ID_ESSENTIAL=price_...
+```
+
+Em producao, use as chaves live do proprio ambiente (`rk_live_...` /
+`pk_live_...`) e mantenha o mesmo nome das variaveis. O webhook deve apontar
+para `/api/stripe/webhook` e assinar os eventos `checkout.session.completed`,
+`customer.subscription.updated` e `customer.subscription.deleted`.
+
+Permissoes minimas recomendadas para a chave restrita: Checkout Sessions
+`Write`, Customers `Write`, Prices `Read` e Subscriptions `Read`. Nunca suba
+chaves Stripe no git.
 
 ### Notificações por e-mail (opcional)
 
@@ -112,14 +143,19 @@ no mesmo SQL Editor. Hoje há:
 - `docs/migration-v9-audit-and-team.sql`
 - `docs/migration-v10-client-internal-notes.sql`
 - `docs/migration-v11-realtime-more.sql`
+- `docs/migration-v12-rls-rpc-helpers.sql`
+- `docs/migration-v13-production-rls-policies.sql` (**aplicar primeiro em staging**)
+- `docs/migration-v14-organization-billing.sql`
+- `docs/migration-v15-privacy-audit-log.sql`
 
 Para deploy em produção, ver [`docs/DEPLOY.md`](./docs/DEPLOY.md).
 
 ### Plano de RLS para produção
 
-`docs/rls-production-plan.sql` contém o plano comentado de Row Level
-Security. **Não aplique em produção sem testar o fluxo completo** —
-o arquivo traz um checklist no fim.
+`docs/migration-v12-rls-rpc-helpers.sql` prepara os fluxos que precisam de
+RPC com `SECURITY DEFINER`. `docs/migration-v13-production-rls-policies.sql`
+liga Row Level Security em tabelas e Storage. **Não aplique a v13 direto em
+produção sem testar o fluxo completo em staging**.
 
 ## Como testar o fluxo
 
@@ -151,6 +187,8 @@ npm run dev        # ambiente de desenvolvimento
 npm run build      # build de produção
 npm run start      # servir o build
 npm run lint       # ESLint
+npm test           # testes unitários leves
+npm run test:smoke # smoke test HTTP (precisa do app rodando)
 npm run gen:types  # regenera src/lib/database.types.ts a partir do Supabase
 ```
 
