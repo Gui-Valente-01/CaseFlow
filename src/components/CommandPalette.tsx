@@ -21,7 +21,8 @@ type Item = Result & { kind: "client" | "case" };
 const SHORTCUTS: Array<{ label: string; href: string }> = [
   { label: "Novo cliente", href: "/dashboard/clientes/novo" },
   { label: "Novo processo", href: "/dashboard/processos/novo" },
-  { label: "Configurações do escritório", href: "/dashboard/configuracoes" },
+  { label: "Configurações do escritório", href: "/dashboard/conta?tab=escritorio" },
+  { label: "Plano e cobrança", href: "/dashboard/conta?tab=plano" },
   { label: "Minha conta", href: "/dashboard/conta" },
 ];
 

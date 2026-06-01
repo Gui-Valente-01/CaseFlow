@@ -10,11 +10,6 @@ const NAV = [
   { label: "Processos", href: "/dashboard/processos", icon: "PR" },
   { label: "Agenda", href: "/dashboard/agenda", icon: "AG" },
   { label: "Notificações", href: "/dashboard/notificacoes", icon: "NT" },
-  { label: "Equipe", href: "/dashboard/equipe", icon: "EQ" },
-  { label: "Auditoria", href: "/dashboard/auditoria", icon: "AU" },
-  { label: "Plano", href: "/dashboard/plano", icon: "PL" },
-  { label: "Produção", href: "/dashboard/producao", icon: "PD" },
-  { label: "Escritório", href: "/dashboard/configuracoes", icon: "ES" },
   { label: "Minha conta", href: "/dashboard/conta", icon: "MC" },
 ];
 

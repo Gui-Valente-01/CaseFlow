@@ -714,7 +714,7 @@ function OnboardingCard({ fullName }: { fullName: string }) {
       description:
         "Com e-mail, CPF/CNPJ e senha definidos, o cliente entra em /cliente/acesso e acompanha tudo.",
       cta: "Configurar escritório",
-      href: "/dashboard/configuracoes",
+      href: "/dashboard/conta?tab=escritorio",
       primary: false,
     },
   ];
