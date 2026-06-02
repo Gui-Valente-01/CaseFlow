@@ -23,9 +23,14 @@ que aceite Node (Railway, Fly.io, AWS, etc.).
    - `docs/migration-v10-client-internal-notes.sql`
    - `docs/migration-v11-realtime-more.sql`
    - `docs/migration-v12-rls-rpc-helpers.sql`
-   - `docs/migration-v13-production-rls-policies.sql` (primeiro em staging)
+   - ~~`docs/migration-v13-production-rls-policies.sql`~~ **NÃO aplicar em
+     produção** — liga RLS estrito e exige validação em staging. Se já
+     aplicou e quebrou (lista de clientes vazia, login do cliente falhando),
+     rode a **v16** abaixo.
    - `docs/migration-v14-organization-billing.sql`
    - `docs/migration-v15-privacy-audit-log.sql`
+   - `docs/migration-v16-disable-rls-rollback.sql` (rollback da v13 — deixa o
+     produto funcional enquanto o RLS não for testado em staging)
 3. Anote os valores em **Project Settings → API**:
    - `URL`
    - `anon` key
