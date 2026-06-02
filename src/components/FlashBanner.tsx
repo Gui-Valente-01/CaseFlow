@@ -12,6 +12,10 @@
 const MESSAGES: Record<string, { title: string; tone?: "success" | "info" }> = {
   // Clientes
   client_created: { title: "Cliente cadastrado com sucesso." },
+  client_linked: {
+    title:
+      "Cliente vinculado ao seu escritório. Ele já tinha conta no CaseFlow e usa a senha que já possui.",
+  },
   client_updated: { title: "Dados do cliente atualizados." },
   client_deleted: { title: "Cliente removido." },
   // Processos

@@ -12,7 +12,7 @@ import {
   getCurrentProfile,
 } from "@/lib/supabase-server";
 import { recordAudit } from "@/lib/audit";
-import { isValidDocument } from "@/lib/document";
+import { isValidDocument, onlyDigits } from "@/lib/document";
 
 export interface ClientFormState {
   error?: string;
@@ -35,14 +35,32 @@ export async function createClientAction(
   const full_name = field(formData, "full_name");
   if (!full_name) return { error: "Informe o nome do cliente." };
 
-  const email = field(formData, "email").toLowerCase();
+  let email = field(formData, "email").toLowerCase();
   const documentRaw = field(formData, "document");
   const password = field(formData, "password");
 
-  // Se o advogado preencheu senha, exige e-mail + CPF/CNPJ e provisiona o
-  // acesso no Auth. Sem senha, cria só o cadastro de cliente (sem login).
   let profileId: string | null = null;
-  if (password) {
+  let linkedExisting = false;
+
+  // 1) Se o CPF/CNPJ já tem conta em OUTRO escritório, reaproveita ela.
+  //    Assim a mesma pessoa pode ser cliente de vários advogados com um
+  //    único login, e o e-mail não conflita.
+  if (isValidDocument(documentRaw)) {
+    const existing = await findExistingClientAccountByDocument(
+      onlyDigits(documentRaw)
+    );
+    if (existing) {
+      profileId = existing.profileId;
+      linkedExisting = true;
+      // Usa o e-mail da conta existente (login é compartilhado).
+      if (existing.email) email = existing.email;
+    }
+  }
+
+  // 2) Sem conta existente: se o advogado definiu senha, provisiona uma
+  //    conta nova. (Se vinculou a existente, ignora a senha — a pessoa já
+  //    tem a dela.)
+  if (!linkedExisting && password) {
     if (password.length < MIN_PASSWORD) {
       return {
         error: `A senha precisa ter no mínimo ${MIN_PASSWORD} caracteres.`,
@@ -94,12 +112,14 @@ export async function createClientAction(
     entityType: "client",
     entityId: inserted.id,
     entityLabel: full_name,
-    metadata: { has_access: Boolean(profileId) },
+    metadata: { has_access: Boolean(profileId), linked_existing: linkedExisting },
   });
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/clientes");
-  redirect("/dashboard/clientes?flash=client_created");
+  redirect(
+    `/dashboard/clientes?flash=${linkedExisting ? "client_linked" : "client_created"}`
+  );
 }
 
 export async function updateClientAction(
@@ -239,6 +259,54 @@ export async function deleteClientAction(formData: FormData): Promise<void> {
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/clientes");
   redirect("/dashboard/clientes?flash=client_deleted");
+}
+
+// =====================================================================
+// Cliente compartilhado entre escritórios
+// =====================================================================
+
+/**
+ * Procura, em QUALQUER escritório, uma conta de cliente já existente com
+ * o mesmo CPF/CNPJ. Se achar, devolve o profile + e-mail dessa conta —
+ * assim um segundo advogado vincula o MESMO cliente em vez de criar uma
+ * conta duplicada (o que travaria pelo e-mail único do Auth).
+ *
+ * Usa service role pra enxergar além da própria organização.
+ */
+async function findExistingClientAccountByDocument(
+  documentDigits: string
+): Promise<{ profileId: string; email: string | null; fullName: string } | null> {
+  if (documentDigits.length < 11) return null;
+  const admin = getSupabaseAdmin();
+  if (!admin) return null;
+
+  const { data: rows } = await admin
+    .from("clients")
+    .select("profile_id, email, full_name, document")
+    .not("profile_id", "is", null)
+    .not("document", "is", null);
+
+  const match = (rows ?? []).find(
+    (c) => onlyDigits((c.document as string | null) ?? "") === documentDigits
+  );
+  if (!match || !match.profile_id) return null;
+
+  // Pega o e-mail real da conta (fonte da verdade no profile).
+  const { data: prof } = await admin
+    .from("profiles")
+    .select("email, full_name")
+    .eq("id", match.profile_id)
+    .maybeSingle();
+
+  return {
+    profileId: match.profile_id as string,
+    email:
+      (prof?.email as string | null) ?? (match.email as string | null) ?? null,
+    fullName:
+      (prof?.full_name as string | null) ??
+      (match.full_name as string | null) ??
+      "",
+  };
 }
 
 // =====================================================================

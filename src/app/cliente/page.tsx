@@ -93,7 +93,12 @@ export default async function ClientePage() {
                 <div className="border-b border-slate-200 bg-gradient-to-br from-slate-50 to-white p-6">
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>
-                      <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+                      <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500">
+                        {portal.officeCount > 1 ? (
+                          <span className="inline-flex items-center rounded-full bg-slate-900 px-2.5 py-0.5 text-[11px] font-semibold text-white">
+                            {item.officeName}
+                          </span>
+                        ) : null}
                         <span className="font-mono">
                           {item.case_number ?? "Processo sem número"}
                         </span>

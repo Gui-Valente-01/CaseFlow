@@ -1111,8 +1111,11 @@ export async function getOperationalNotifications(
 
 export interface ClientPortalData {
   clientName: string;
+  /** Quantos escritórios diferentes têm este cliente. */
+  officeCount: number;
   cases: Array<
     CaseDetail & {
+      officeName: string;
       updates: CaseUpdateItem[];
       documents: CaseDocumentItem[];
       messages: CaseMessageItem[];
@@ -1124,34 +1127,46 @@ export async function getClientPortalData(
   profileId: string
 ): Promise<ClientPortalData | null> {
   const supabase = await createSupabaseServerClient();
-  const { data: client } = await supabase
+  // Um mesmo cliente (login) pode estar vinculado a vários escritórios.
+  // Buscamos TODOS os cadastros com esse profile_id e agregamos os
+  // processos de todos, identificando o escritório de cada um.
+  const { data: clientRows } = await supabase
     .from("clients")
-    .select("id, full_name, organization_id")
-    .eq("profile_id", profileId)
-    .maybeSingle();
+    .select("id, full_name, organization_id, organizations(name)")
+    .eq("profile_id", profileId);
 
-  if (!client) return null;
+  if (!clientRows || clientRows.length === 0) return null;
 
-  const cases = await getCasesByClientId(client.organization_id, client.id);
-  const details = await Promise.all(
-    cases.map(async (item) => {
+  const clientName = clientRows[0].full_name;
+  const offices = new Set<string>();
+
+  const aggregated: ClientPortalData["cases"] = [];
+
+  for (const client of clientRows) {
+    offices.add(client.organization_id);
+    const orgField = (Array.isArray(client.organizations)
+      ? client.organizations[0]
+      : client.organizations) as { name?: string } | null;
+    const officeName = orgField?.name ?? "Escritório";
+
+    const cases = await getCasesByClientId(client.organization_id, client.id);
+    for (const item of cases) {
       const detail = await getCaseById(client.organization_id, item.id);
-      if (!detail) return null;
+      if (!detail) continue;
       await markCaseMessagesAsRead(item.id, profileId);
       const [updates, documents, messages] = await Promise.all([
         getCaseUpdates(item.id),
         getCaseDocuments(item.id),
         getCaseMessages(item.id),
       ]);
-      return { ...detail, updates, documents, messages };
-    })
-  );
+      aggregated.push({ ...detail, officeName, updates, documents, messages });
+    }
+  }
 
   return {
-    clientName: client.full_name,
-    cases: details.filter((item): item is NonNullable<typeof item> =>
-      Boolean(item)
-    ),
+    clientName,
+    officeCount: offices.size,
+    cases: aggregated,
   };
 }
 
