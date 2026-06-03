@@ -8,6 +8,29 @@ This version has breaking changes - APIs, conventions, and file structure may al
 
 ## Portal Juridico
 
+Este repositorio e o site oficial do CaseFlow.
+
+Fonte oficial de contexto do produto:
+
+- `C:\Users\Win 11\Desktop\Sistema de advogado\CaseFlow\caseflow-brain`
+
+Antes de alterar codigo, consulte principalmente:
+
+- `C:\Users\Win 11\Desktop\Sistema de advogado\CaseFlow\caseflow-brain\README.md`
+- `C:\Users\Win 11\Desktop\Sistema de advogado\CaseFlow\caseflow-brain\00-central\painel-principal-caseflow.md`
+- `C:\Users\Win 11\Desktop\Sistema de advogado\CaseFlow\caseflow-brain\07-prompts\prompt-mestre-caseflow.md`
+- `C:\Users\Win 11\Desktop\Sistema de advogado\CaseFlow\caseflow-brain\01-visao-produto\roadmap.md`
+- `C:\Users\Win 11\Desktop\Sistema de advogado\CaseFlow\caseflow-brain\04-banco-dados\modelo-inicial.md`
+- `C:\Users\Win 11\Desktop\Sistema de advogado\CaseFlow\caseflow-brain\02-regras-negocio\permissoes.md`
+- `C:\Users\Win 11\Desktop\Sistema de advogado\CaseFlow\caseflow-brain\05-desenvolvimento\stack.md`
+- `C:\Users\Win 11\Desktop\Sistema de advogado\CaseFlow\caseflow-brain\05-desenvolvimento\arquitetura.md`
+
+Se tomar uma decisao importante de produto, regra, banco ou arquitetura,
+atualize tambem a nota correspondente no cerebro. Se encontrar e resolver um
+erro relevante, registre em:
+
+- `C:\Users\Win 11\Desktop\Sistema de advogado\CaseFlow\caseflow-brain\08-erros-solucoes\log-de-erros.md`
+
 Antes de implementar qualquer funcionalidade, leia:
 
 - `docs/SYSTEM_BASE.md`

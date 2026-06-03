@@ -7,6 +7,8 @@ em um portal próprio.
 Documentos de referência:
 
 - [`AGENTS.md`](./AGENTS.md) — regras para quem altera o código.
+- [`docs/CASEFLOW_BRAIN.md`](./docs/CASEFLOW_BRAIN.md) — conexão com o cérebro
+  do projeto no Obsidian.
 - [`docs/SYSTEM_BASE.md`](./docs/SYSTEM_BASE.md) — base técnica do sistema.
 - [`docs/PRODUCT_VISION.md`](./docs/PRODUCT_VISION.md) — visão de produto.
 - [`docs/schema.sql`](./docs/schema.sql) — schema do Supabase.
