@@ -4,7 +4,7 @@ Este projeto usa um vault do Obsidian como fonte oficial de contexto do produto.
 
 ## Caminhos
 
-- Site oficial: `C:\Users\Win 11\Desktop\Sistema de advogado\sistema-advogados`
+- Site oficial: `C:\Users\Win 11\Desktop\Sistema de advogado\CaseFlow\sistema-advogados`
 - Cerebro do projeto: `C:\Users\Win 11\Desktop\Sistema de advogado\CaseFlow\caseflow-brain`
 
 ## Como usar
@@ -24,3 +24,18 @@ as notas principais que devem ser lidas.
 
 O codigo vive neste repositorio. O contexto vivo do projeto vive no Obsidian.
 Quando uma mudanca de codigo alterar uma decisao do produto, atualize os dois.
+
+## Autoaprendizado local
+
+O cérebro possui um script local que lê este repositório e atualiza um snapshot
+automático no Obsidian:
+
+```bash
+cd "C:\Users\Win 11\Desktop\Sistema de advogado\CaseFlow"
+node scripts\caseflow-brain-learn.js
+```
+
+Arquivos gerados:
+
+- `caseflow-brain\11-autoaprendizado\snapshot-automatico-site.md`
+- `caseflow-brain\11-autoaprendizado\historico-aprendizado.md`
