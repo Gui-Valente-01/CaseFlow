@@ -10,7 +10,6 @@ const NAV = [
   { label: "Processos", href: "/dashboard/processos", icon: "PR" },
   { label: "Agenda", href: "/dashboard/agenda", icon: "AG" },
   { label: "NotificaÃ§Ãµes", href: "/dashboard/notificacoes", icon: "NT" },
-  { label: "Cerebro", href: "/dashboard/cerebro", icon: "CB" },
   { label: "Minha conta", href: "/dashboard/conta", icon: "MC" },
 ];
 
