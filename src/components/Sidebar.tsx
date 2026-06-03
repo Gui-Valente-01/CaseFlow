@@ -1,15 +1,16 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogoMark } from "@/components/Logo";
 
 const NAV = [
-  { label: "Visão geral", href: "/dashboard", icon: "VG" },
+  { label: "VisÃ£o geral", href: "/dashboard", icon: "VG" },
   { label: "Clientes", href: "/dashboard/clientes", icon: "CL" },
   { label: "Processos", href: "/dashboard/processos", icon: "PR" },
   { label: "Agenda", href: "/dashboard/agenda", icon: "AG" },
-  { label: "Notificações", href: "/dashboard/notificacoes", icon: "NT" },
+  { label: "NotificaÃ§Ãµes", href: "/dashboard/notificacoes", icon: "NT" },
+  { label: "Cerebro", href: "/dashboard/cerebro", icon: "CB" },
   { label: "Minha conta", href: "/dashboard/conta", icon: "MC" },
 ];
 
@@ -21,7 +22,7 @@ export function Sidebar() {
       <div className="px-5 py-5 lg:px-6">
         <Link href="/" className="block">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-teal-300">
-            SaaS jurídico
+            SaaS jurÃ­dico
           </p>
           <div className="mt-2 flex items-center gap-2">
             <LogoMark size={28} variant="bare" />
@@ -61,3 +62,4 @@ export function Sidebar() {
     </aside>
   );
 }
+
