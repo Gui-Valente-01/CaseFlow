@@ -125,28 +125,28 @@ export default async function DashboardPage() {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 xl:min-w-[680px] xl:grid-cols-4">
-              <PriorityPill 
+              <PriorityPill
                 label="Para aprovar"
                 value={stats.receivedDocuments}
-                href="/dashboard/processos"
+                href="/dashboard/processos?focus=received_docs"
                 tone="teal"
               />
-              <PriorityPill 
+              <PriorityPill
                 label="Rejeitados"
                 value={stats.rejectedDocuments}
-                href="/dashboard/processos"
+                href="/dashboard/processos?focus=rejected_docs"
                 tone="rose"
               />
-              <PriorityPill 
+              <PriorityPill
                 label="Mensagens"
                 value={stats.unreadMessages}
-                href="/dashboard/processos"
+                href="/dashboard/processos?focus=unread_msgs"
                 tone="rose"
               />
-              <PriorityPill 
+              <PriorityPill
                 label="Sem próximo passo"
                 value={stats.casesWithoutNextStep}
-                href="/dashboard/processos"
+                href="/dashboard/processos?focus=no_next_step"
                 tone="amber"
               />
             </div>
@@ -236,25 +236,25 @@ export default async function DashboardPage() {
               <QuickAction
                 title="Aprovar documentos"
                 description={`${stats.receivedDocuments} documento${stats.receivedDocuments === 1 ? "" : "s"} aguardando análise.`}
-                href="/dashboard/processos"
+                href="/dashboard/processos?focus=received_docs"
                 tone="teal"
               />
               <QuickAction
                 title="Acompanhar rejeitados"
                 description={`${stats.rejectedDocuments} documento${stats.rejectedDocuments === 1 ? "" : "s"} aguardando reenvio.`}
-                href="/dashboard/processos"
+                href="/dashboard/processos?focus=rejected_docs"
                 tone="rose"
               />
               <QuickAction
                 title="Responder clientes"
                 description={`${stats.unreadMessages} mensagem${stats.unreadMessages === 1 ? "" : "s"} nova${stats.unreadMessages === 1 ? "" : "s"}.`}
-                href="/dashboard/processos"
+                href="/dashboard/processos?focus=unread_msgs"
                 tone="slate"
               />
               <QuickAction
                 title="Definir próximos passos"
                 description={`${stats.casesWithoutNextStep} processo${stats.casesWithoutNextStep === 1 ? "" : "s"} sem próximo passo.`}
-                href="/dashboard/processos"
+                href="/dashboard/processos?focus=no_next_step"
                 tone="amber"
               />
             </div>

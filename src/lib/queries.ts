@@ -219,6 +219,10 @@ export interface CaseRow {
   pendingDocs?: number;
   /** Só preenchido por `getAllCases` (lista completa de processos). */
   unreadMessages?: number;
+  /** Documentos enviados pelo cliente aguardando análise (status received). */
+  receivedDocs?: number;
+  /** Documentos rejeitados aguardando reenvio (status rejected). */
+  rejectedDocs?: number;
 }
 
 function extractClientName(field: unknown): string {
@@ -257,7 +261,7 @@ export async function getRecentCases(
 export async function getAllCases(organizationId: string): Promise<CaseRow[]> {
   const supabase = await createSupabaseServerClient();
 
-  const [casesRes, pendingDocsRes, unreadMsgsRes] = await Promise.all([
+  const [casesRes, docsRes, unreadMsgsRes] = await Promise.all([
     supabase
       .from("cases")
       .select(
@@ -265,10 +269,11 @@ export async function getAllCases(organizationId: string): Promise<CaseRow[]> {
       )
       .eq("organization_id", organizationId)
       .order("updated_at", { ascending: false }),
+    // Uma só leitura de documentos por status, agrupada no código.
     supabase
       .from("documents")
-      .select("case_id, cases!inner(organization_id)")
-      .eq("status", "pending")
+      .select("case_id, status, cases!inner(organization_id)")
+      .in("status", ["pending", "received", "rejected"])
       .eq("cases.organization_id", organizationId),
     supabase
       .from("messages")
@@ -281,9 +286,17 @@ export async function getAllCases(organizationId: string): Promise<CaseRow[]> {
   ]);
 
   const pendingByCase = new Map<string, number>();
-  for (const row of pendingDocsRes.data ?? []) {
-    const id = (row as { case_id: string }).case_id;
-    pendingByCase.set(id, (pendingByCase.get(id) ?? 0) + 1);
+  const receivedByCase = new Map<string, number>();
+  const rejectedByCase = new Map<string, number>();
+  for (const row of docsRes.data ?? []) {
+    const { case_id: id, status } = row as { case_id: string; status: string };
+    const map =
+      status === "pending"
+        ? pendingByCase
+        : status === "received"
+          ? receivedByCase
+          : rejectedByCase;
+    map.set(id, (map.get(id) ?? 0) + 1);
   }
 
   const unreadByCase = new Map<string, number>();
@@ -304,6 +317,8 @@ export async function getAllCases(organizationId: string): Promise<CaseRow[]> {
     hasNextStep: Boolean(row.next_step?.trim()),
     pendingDocs: pendingByCase.get(row.id) ?? 0,
     unreadMessages: unreadByCase.get(row.id) ?? 0,
+    receivedDocs: receivedByCase.get(row.id) ?? 0,
+    rejectedDocs: rejectedByCase.get(row.id) ?? 0,
   }));
 }
 

@@ -17,6 +17,8 @@ type StatusValue = (typeof STATUS_FILTERS)[number]["value"];
 
 const FOCUS_FILTERS = [
   { value: "no_next_step", label: "Sem próximo passo" },
+  { value: "received_docs", label: "Para aprovar" },
+  { value: "rejected_docs", label: "Rejeitados" },
   { value: "pending_docs", label: "Documentos pendentes" },
   { value: "unread_msgs", label: "Mensagens novas" },
 ] as const;
@@ -56,6 +58,8 @@ export default async function ProcessosPage({
       if (!c.hasNextStep && c.statusRaw === "active") acc.no_next_step += 1;
       if ((c.pendingDocs ?? 0) > 0) acc.pending_docs += 1;
       if ((c.unreadMessages ?? 0) > 0) acc.unread_msgs += 1;
+      if ((c.receivedDocs ?? 0) > 0) acc.received_docs += 1;
+      if ((c.rejectedDocs ?? 0) > 0) acc.rejected_docs += 1;
       return acc;
     },
     {
@@ -63,6 +67,8 @@ export default async function ProcessosPage({
       no_next_step: 0,
       pending_docs: 0,
       unread_msgs: 0,
+      received_docs: 0,
+      rejected_docs: 0,
     }
   );
 
@@ -73,6 +79,8 @@ export default async function ProcessosPage({
       return false;
     if (focusFilter === "pending_docs" && (c.pendingDocs ?? 0) === 0) return false;
     if (focusFilter === "unread_msgs" && (c.unreadMessages ?? 0) === 0) return false;
+    if (focusFilter === "received_docs" && (c.receivedDocs ?? 0) === 0) return false;
+    if (focusFilter === "rejected_docs" && (c.rejectedDocs ?? 0) === 0) return false;
     if (!term) return true;
     return (
       c.title.toLowerCase().includes(term) ||
@@ -458,6 +466,8 @@ function focusToneOf(
   if (value === "pending_docs") return "amber";
   if (value === "unread_msgs") return "rose";
   if (value === "no_next_step") return "teal";
+  if (value === "received_docs") return "teal";
+  if (value === "rejected_docs") return "rose";
   return undefined;
 }
 
