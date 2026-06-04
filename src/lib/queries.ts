@@ -215,8 +215,10 @@ export interface CaseRow {
   statusRaw: string;
   nextStep: string;
   hasNextStep: boolean;
-  pendingDocs: number;
-  unreadMessages: number;
+  /** Só preenchido por `getAllCases` (lista completa de processos). */
+  pendingDocs?: number;
+  /** Só preenchido por `getAllCases` (lista completa de processos). */
+  unreadMessages?: number;
 }
 
 function extractClientName(field: unknown): string {
@@ -249,8 +251,6 @@ export async function getRecentCases(
     statusRaw: row.status,
     nextStep: row.next_step ?? "—",
     hasNextStep: Boolean(row.next_step?.trim()),
-    pendingDocs: 0,
-    unreadMessages: 0,
   }));
 }
 
@@ -330,8 +330,6 @@ export async function getCasesByClientId(
     statusRaw: row.status,
     nextStep: row.next_step ?? "—",
     hasNextStep: Boolean(row.next_step?.trim()),
-    pendingDocs: 0,
-    unreadMessages: 0,
   }));
 }
 
@@ -1000,6 +998,15 @@ export async function getUpcomingTasks(
 
 export async function getTaskStats(organizationId: string): Promise<TaskStats> {
   const tasks = await getUpcomingTasks(organizationId, 200);
+  return computeTaskStats(tasks);
+}
+
+/**
+ * Deriva as estatísticas de agenda a partir de uma lista de tarefas já
+ * carregada. Separado de `getTaskStats` pra quem já tem as tarefas em mãos
+ * (ex.: dashboard) não precisar buscá-las de novo no banco.
+ */
+export function computeTaskStats(tasks: CaseTaskItem[]): TaskStats {
   const now = new Date();
   const startToday = new Date(now);
   startToday.setHours(0, 0, 0, 0);
@@ -1140,28 +1147,43 @@ export async function getClientPortalData(
   const clientName = clientRows[0].full_name;
   const offices = new Set<string>();
 
-  const aggregated: ClientPortalData["cases"] = [];
+  // Para cada cadastro (escritório) do cliente, lista os processos e busca
+  // detalhe + timeline + documentos + mensagens de todos EM PARALELO. Antes
+  // isso era um laço sequencial (N+1), que deixava o portal lento pra quem
+  // tinha vários processos.
+  const perClient = await Promise.all(
+    clientRows.map(async (client) => {
+      offices.add(client.organization_id);
+      const orgField = (Array.isArray(client.organizations)
+        ? client.organizations[0]
+        : client.organizations) as { name?: string } | null;
+      const officeName = orgField?.name ?? "Escritório";
 
-  for (const client of clientRows) {
-    offices.add(client.organization_id);
-    const orgField = (Array.isArray(client.organizations)
-      ? client.organizations[0]
-      : client.organizations) as { name?: string } | null;
-    const officeName = orgField?.name ?? "Escritório";
+      const cases = await getCasesByClientId(client.organization_id, client.id);
+      return Promise.all(
+        cases.map(async (item) => {
+          const [detail, updates, documents, messages] = await Promise.all([
+            getCaseById(client.organization_id, item.id),
+            getCaseUpdates(item.id),
+            getCaseDocuments(item.id),
+            getCaseMessages(item.id),
+          ]);
+          if (!detail) return null;
+          return { ...detail, officeName, updates, documents, messages };
+        })
+      );
+    })
+  );
 
-    const cases = await getCasesByClientId(client.organization_id, client.id);
-    for (const item of cases) {
-      const detail = await getCaseById(client.organization_id, item.id);
-      if (!detail) continue;
-      await markCaseMessagesAsRead(item.id, profileId);
-      const [updates, documents, messages] = await Promise.all([
-        getCaseUpdates(item.id),
-        getCaseDocuments(item.id),
-        getCaseMessages(item.id),
-      ]);
-      aggregated.push({ ...detail, officeName, updates, documents, messages });
-    }
-  }
+  const aggregated = perClient
+    .flat()
+    .filter((c): c is NonNullable<typeof c> => c !== null);
+
+  // O cliente vê todas as mensagens ao abrir o portal, então marcamos as do
+  // escritório como lidas — num único lote paralelo, separado da leitura.
+  await Promise.all(
+    aggregated.map((c) => markCaseMessagesAsRead(c.id, profileId))
+  );
 
   return {
     clientName,

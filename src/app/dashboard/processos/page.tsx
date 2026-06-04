@@ -54,8 +54,8 @@ export default async function ProcessosPage({
       acc.all += 1;
       acc[c.statusRaw] = (acc[c.statusRaw] ?? 0) + 1;
       if (!c.hasNextStep && c.statusRaw === "active") acc.no_next_step += 1;
-      if (c.pendingDocs > 0) acc.pending_docs += 1;
-      if (c.unreadMessages > 0) acc.unread_msgs += 1;
+      if ((c.pendingDocs ?? 0) > 0) acc.pending_docs += 1;
+      if ((c.unreadMessages ?? 0) > 0) acc.unread_msgs += 1;
       return acc;
     },
     {
@@ -71,8 +71,8 @@ export default async function ProcessosPage({
     if (statusFilter !== "all" && c.statusRaw !== statusFilter) return false;
     if (focusFilter === "no_next_step" && (c.hasNextStep || c.statusRaw !== "active"))
       return false;
-    if (focusFilter === "pending_docs" && c.pendingDocs === 0) return false;
-    if (focusFilter === "unread_msgs" && c.unreadMessages === 0) return false;
+    if (focusFilter === "pending_docs" && (c.pendingDocs ?? 0) === 0) return false;
+    if (focusFilter === "unread_msgs" && (c.unreadMessages ?? 0) === 0) return false;
     if (!term) return true;
     return (
       c.title.toLowerCase().includes(term) ||
@@ -294,8 +294,8 @@ export default async function ProcessosPage({
                           )}
                         </p>
                         <PendingBadges
-                          pendingDocs={c.pendingDocs}
-                          unreadMessages={c.unreadMessages}
+                          pendingDocs={c.pendingDocs ?? 0}
+                          unreadMessages={c.unreadMessages ?? 0}
                           className="mt-3"
                         />
                       </Link>
@@ -346,8 +346,8 @@ function CaseRowItem({ c }: { c: CaseRow }) {
       </td>
       <td className="px-5 py-4">
         <PendingBadges
-          pendingDocs={c.pendingDocs}
-          unreadMessages={c.unreadMessages}
+          pendingDocs={c.pendingDocs ?? 0}
+          unreadMessages={c.unreadMessages ?? 0}
         />
       </td>
       <td className="px-5 py-4 text-right">

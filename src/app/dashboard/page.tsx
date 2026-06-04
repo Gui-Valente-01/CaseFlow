@@ -14,7 +14,7 @@ import {
   getRecentMessages,
   getRecentPendingDocuments,
   getRecentUnreadClientMessages,
-  getTaskStats,
+  computeTaskStats,
   getUpcomingTasks,
 } from "@/lib/queries";
 
@@ -32,8 +32,7 @@ export default async function DashboardPage() {
     unreadClientMessages,
     nextSteps,
     casesWithoutNextStep,
-    taskStats,
-    upcomingTasks,
+    allUpcomingTasks,
     metrics,
   ] =
     await Promise.all([
@@ -46,10 +45,14 @@ export default async function DashboardPage() {
       getRecentUnreadClientMessages(profile.organization_id, 5),
       getCasesWithNextStep(profile.organization_id, 5),
       getCasesWithoutNextStep(profile.organization_id, 5),
-      getTaskStats(profile.organization_id),
-      getUpcomingTasks(profile.organization_id, 5),
+      // Busca uma vez só: deriva as estatísticas e a lista curta daqui,
+      // em vez de chamar getTaskStats (que buscava as tarefas de novo).
+      getUpcomingTasks(profile.organization_id, 200),
       getDashboardMetrics(profile.organization_id),
     ]);
+
+  const taskStats = computeTaskStats(allUpcomingTasks);
+  const upcomingTasks = allUpcomingTasks.slice(0, 5);
 
   const cards = [
     {
