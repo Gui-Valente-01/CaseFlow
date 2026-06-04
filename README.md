@@ -152,6 +152,8 @@ no mesmo SQL Editor. Hoje há:
 - `docs/migration-v16-disable-rls-rollback.sql` (rollback emergencial da v13)
 - `docs/migration-v17-rls-reenable.sql` (**religa RLS — corrige a v13; testar com
   `docs/rls-test-harness.sql` antes**)
+- `docs/migration-v18-document-instructions.sql` (campo de instruções na
+  solicitação de documento — **aplicar antes do deploy do código**)
 
 Para deploy em produção, ver [`docs/DEPLOY.md`](./docs/DEPLOY.md).
 

@@ -311,6 +311,7 @@ export async function createDocumentRequestAction(
 
   const caseId = field(formData, "case_id");
   const name = field(formData, "name");
+  const instructions = field(formData, "instructions");
 
   if (!caseId || !name) return;
   if (!(await canAccessCase(caseId, profile.organization_id))) return;
@@ -320,6 +321,7 @@ export async function createDocumentRequestAction(
     case_id: caseId,
     uploaded_by: profile.id,
     name,
+    instructions: instructions || null,
     storage_path: `pending/${caseId}/${crypto.randomUUID()}`,
     status: "pending",
   });

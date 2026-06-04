@@ -275,7 +275,7 @@ function F({
         className="mt-2 h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
       />
       {hint ? (
-        <span className="mt-1 block text-[11px] leading-5 text-slate-500">
+        <span className="mt-1 block text-xs leading-5 text-slate-600">
           {hint}
         </span>
       ) : null}

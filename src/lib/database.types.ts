@@ -332,6 +332,7 @@ export type Database = {
           case_id: string
           created_at: string
           id: string
+          instructions: string | null
           mime_type: string | null
           name: string
           rejection_reason: string | null
@@ -345,6 +346,7 @@ export type Database = {
           case_id: string
           created_at?: string
           id?: string
+          instructions?: string | null
           mime_type?: string | null
           name: string
           rejection_reason?: string | null
@@ -358,6 +360,7 @@ export type Database = {
           case_id?: string
           created_at?: string
           id?: string
+          instructions?: string | null
           mime_type?: string | null
           name?: string
           rejection_reason?: string | null

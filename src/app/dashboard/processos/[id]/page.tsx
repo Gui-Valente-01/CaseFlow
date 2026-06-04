@@ -555,17 +555,29 @@ function Documents({
       </div>
 
       <div className="mt-5 space-y-3 rounded-xl border border-slate-200 bg-slate-50/60 p-3">
-        <form action={createDocumentRequestAction} className="flex gap-2">
+        <form action={createDocumentRequestAction} className="space-y-2">
           <input type="hidden" name="case_id" value={caseId} />
-          <input 
-            name="name"
-            required
-            placeholder="Ex.: RG, comprovante, contrato"
-            className="h-10 min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
+          <div className="flex gap-2">
+            <input
+              name="name"
+              required
+              placeholder="Ex.: RG, comprovante, contrato"
+              className="h-10 min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
+            />
+            <SubmitButton pendingLabel="Solicitando..." className="shrink-0">
+              Solicitar
+            </SubmitButton>
+          </div>
+          <textarea
+            name="instructions"
+            rows={2}
+            placeholder="Instruções para o cliente (opcional) — ex.: RG frente e verso, colorido e legível. Pode ser foto pelo celular."
+            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm leading-6 text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:ring-4 focus:ring-teal-100"
           />
-          <SubmitButton pendingLabel="Solicitando..." className="shrink-0">
-            Solicitar
-          </SubmitButton>
+          <p className="text-xs leading-5 text-slate-600">
+            A instrução aparece para o cliente embaixo do documento no portal —
+            quanto mais claro o pedido, menos chance de vir errado.
+          </p>
         </form>
 
         <div className="border-t border-slate-200 pt-3">
@@ -620,11 +632,21 @@ function Documents({
                     Solicitado em {formatDate(document.createdAt)}
                   </p>
                 </div>
-                <DocStatusBadge 
+                <DocStatusBadge
                   status={document.status}
                   label={document.statusLabel}
                 />
               </div>
+              {document.instructions ? (
+                <div className="mt-3 rounded-lg border border-sky-100 bg-sky-50 px-3 py-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-sky-800">
+                    Instruções enviadas ao cliente
+                  </p>
+                  <p className="mt-1 whitespace-pre-wrap text-xs leading-5 text-sky-900">
+                    {document.instructions}
+                  </p>
+                </div>
+              ) : null}
               {document.status === "rejected" && document.rejectionReason ? (
                 <div className="mt-3 rounded-lg border border-rose-100 bg-rose-50 px-3 py-2">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-rose-800">

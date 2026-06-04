@@ -107,7 +107,7 @@ export default function DocumentInput({
         ) : null}
       </div>
       {hint ? (
-        <span className="mt-1 block text-[11px] leading-5 text-slate-500">
+        <span className="mt-1 block text-xs leading-5 text-slate-600">
           {hint}
         </span>
       ) : null}

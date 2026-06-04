@@ -433,6 +433,16 @@ function DocumentGroup({
                 </div>
                 <DocStatusBadge status={document.status} label={document.statusLabel} />
               </div>
+              {document.instructions ? (
+                <div className="mt-3 rounded-lg border border-sky-100 bg-sky-50 px-3 py-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-sky-800">
+                    O que enviar
+                  </p>
+                  <p className="mt-1 whitespace-pre-wrap text-xs leading-5 text-sky-900">
+                    {document.instructions}
+                  </p>
+                </div>
+              ) : null}
               {document.status === "rejected" && document.rejectionReason ? (
                 <div className="mt-3 rounded-lg border border-rose-100 bg-rose-50 px-3 py-2">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-rose-800">

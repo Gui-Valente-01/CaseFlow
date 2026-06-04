@@ -455,6 +455,7 @@ export interface CaseDocumentItem {
   statusLabel: string;
   storagePath: string;
   rejectionReason: string | null;
+  instructions: string | null;
   createdAt: string;
 }
 
@@ -476,7 +477,9 @@ export async function getCaseDocuments(
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase
     .from("documents")
-    .select("id, name, status, storage_path, rejection_reason, created_at")
+    .select(
+      "id, name, status, storage_path, rejection_reason, instructions, created_at"
+    )
     .eq("case_id", caseId)
     .order("created_at", { ascending: false });
 
@@ -487,6 +490,7 @@ export async function getCaseDocuments(
     statusLabel: translateDocumentStatus(row.status),
     storagePath: row.storage_path ?? "",
     rejectionReason: row.rejection_reason ?? null,
+    instructions: row.instructions ?? null,
     createdAt: row.created_at,
   }));
 }
