@@ -1,7 +1,6 @@
 "use server";
 
 import { onlyDigits } from "@/lib/document";
-import { isMissingRpc } from "@/lib/supabase-errors";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 
 export interface ClientLookupResult {
@@ -32,10 +31,6 @@ export async function resolveClientLoginAction(
     p_document_digits: documentDigits,
   });
 
-  if (isMissingRpc(error)) {
-    return resolveClientLoginFallback(documentDigits);
-  }
-
   if (error) {
     return {
       ok: false,
@@ -44,46 +39,6 @@ export async function resolveClientLoginAction(
   }
 
   const client = matches?.[0];
-
-  if (!client) {
-    return {
-      ok: false,
-      error:
-        "Não encontrei um cliente com este CPF/CNPJ. Confira o número ou peça ao escritório para revisar seu cadastro.",
-    };
-  }
-
-  const email = client.email?.trim().toLowerCase();
-  if (!email || !client.profile_id) {
-    return {
-      ok: false,
-      error:
-        "Seu acesso ainda não foi liberado. Peça ao escritório para definir sua senha de acesso.",
-    };
-  }
-
-  return { ok: true, email, profileId: client.profile_id };
-}
-
-async function resolveClientLoginFallback(
-  documentDigits: string
-): Promise<ClientLookupResult> {
-  const supabase = await createSupabaseServerClient();
-  const { data: rows, error } = await supabase
-    .from("clients")
-    .select("id, email, document, profile_id")
-    .not("document", "is", null);
-
-  if (error) {
-    return {
-      ok: false,
-      error: "Não foi possível consultar o cadastro. Tente novamente.",
-    };
-  }
-
-  const client = (rows ?? []).find(
-    (item) => onlyDigits(item.document ?? "") === documentDigits
-  );
 
   if (!client) {
     return {

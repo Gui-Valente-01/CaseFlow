@@ -149,15 +149,30 @@ no mesmo SQL Editor. Hoje há:
 - `docs/migration-v13-production-rls-policies.sql` (**aplicar primeiro em staging**)
 - `docs/migration-v14-organization-billing.sql`
 - `docs/migration-v15-privacy-audit-log.sql`
+- `docs/migration-v16-disable-rls-rollback.sql` (rollback emergencial da v13)
+- `docs/migration-v17-rls-reenable.sql` (**religa RLS — corrige a v13; testar com
+  `docs/rls-test-harness.sql` antes**)
 
 Para deploy em produção, ver [`docs/DEPLOY.md`](./docs/DEPLOY.md).
 
 ### Plano de RLS para produção
 
 `docs/migration-v12-rls-rpc-helpers.sql` prepara os fluxos que precisam de
-RPC com `SECURITY DEFINER`. `docs/migration-v13-production-rls-policies.sql`
-liga Row Level Security em tabelas e Storage. **Não aplique a v13 direto em
-produção sem testar o fluxo completo em staging**.
+RPC com `SECURITY DEFINER`. A **v13** ligou RLS mas quebrou em produção (foi
+revertida pela **v16**) — ver `caseflow-brain/08-erros-solucoes/log-de-erros.md`.
+
+Use a **v17** no lugar da v13: ela corrige as policies pro modelo atual
+(cliente compartilhado entre escritórios) e vem com um harness de teste.
+Fluxo seguro:
+
+1. Crie um **branch de staging** no Supabase.
+2. Aplique a `docs/migration-v17-rls-reenable.sql` no branch.
+3. Rode `docs/rls-test-harness.sql` no branch — ele simula advogado e cliente
+   reais (papel `authenticated`) e só passa se a separação de dados estiver
+   correta. **Não dá pra validar RLS pelo SQL Editor comum** (lá você é
+   `postgres`/superuser e o RLS é ignorado — foi o que mascarou o bug da v13).
+4. Se o harness passar e o app funcionar no branch, aplique a v17 em produção.
+5. Se algo quebrar, a `v16` desliga RLS na hora (rollback de 1 clique).
 
 ## Como testar o fluxo
 

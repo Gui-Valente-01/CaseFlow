@@ -1,7 +1,6 @@
 "use server";
 
 import { onlyDigits } from "@/lib/document";
-import { isMissingRpc } from "@/lib/supabase-errors";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 
 export interface ResolveEmailResult {
@@ -39,10 +38,6 @@ export async function resolveResetEmailAction(
     p_document_digits: digits,
   });
 
-  if (isMissingRpc(error)) {
-    return resolveResetEmailFallback(digits);
-  }
-
   if (error) {
     return { ok: false, error: "Não foi possível consultar o cadastro." };
   }
@@ -56,32 +51,4 @@ export async function resolveResetEmailAction(
   }
 
   return { ok: true, email: email.trim().toLowerCase() };
-}
-
-async function resolveResetEmailFallback(
-  digits: string
-): Promise<ResolveEmailResult> {
-  const supabase = await createSupabaseServerClient();
-  const { data: rows, error } = await supabase
-    .from("clients")
-    .select("email, document")
-    .not("document", "is", null);
-
-  if (error) {
-    return { ok: false, error: "Não foi possível consultar o cadastro." };
-  }
-
-  const match = (rows ?? []).find(
-    (row) => onlyDigits(row.document ?? "") === digits
-  );
-
-  if (!match || !match.email) {
-    return {
-      ok: false,
-      error:
-        "Não encontrei um cadastro com este CPF/CNPJ. Procure o escritório.",
-    };
-  }
-
-  return { ok: true, email: match.email.trim().toLowerCase() };
 }
