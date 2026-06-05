@@ -1,6 +1,7 @@
 "use server";
 
 import { onlyDigits } from "@/lib/document";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 
 export interface ClientLookupResult {
@@ -24,6 +25,20 @@ export async function resolveClientLoginAction(
 
   if (documentDigits.length < 11) {
     return { ok: false, error: "Informe um CPF ou CNPJ válido." };
+  }
+
+  // Trava enumeração de CPF/CNPJ: máx. 10 consultas a cada 15 min por IP.
+  const allowed = await checkRateLimit({
+    action: "cliente-login",
+    max: 10,
+    windowSeconds: 900,
+  });
+  if (!allowed) {
+    return {
+      ok: false,
+      error:
+        "Muitas tentativas seguidas. Aguarde alguns minutos e tente novamente.",
+    };
   }
 
   const supabase = await createSupabaseServerClient();

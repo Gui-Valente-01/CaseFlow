@@ -154,6 +154,8 @@ no mesmo SQL Editor. Hoje há:
   `docs/rls-test-harness.sql` antes**)
 - `docs/migration-v18-document-instructions.sql` (campo de instruções na
   solicitação de documento — **aplicar antes do deploy do código**)
+- `docs/migration-v19-rate-limit.sql` (rate limit por IP no login do cliente;
+  o código falha liberado se não aplicada, então a ordem não é crítica)
 
 Para deploy em produção, ver [`docs/DEPLOY.md`](./docs/DEPLOY.md).
 
