@@ -88,7 +88,7 @@ function LoginForm() {
         setStatus({
           kind: "error",
           message:
-            "Conta exige 2FA, mas nenhum fator está configurado. Contate o suporte.",
+            "Sua conta exige verificação em 2 fatores, mas nenhum app autenticador está configurado. Fale com o suporte.",
         });
         return;
       }
@@ -97,7 +97,8 @@ function LoginForm() {
         await supabase.auth.signOut();
         setStatus({
           kind: "error",
-          message: "Falha ao iniciar o desafio de 2FA.",
+          message:
+            "Não foi possível iniciar a verificação em 2 fatores. Tente de novo.",
         });
         return;
       }
@@ -107,7 +108,8 @@ function LoginForm() {
         await supabase.auth.signOut();
         setStatus({
           kind: "error",
-          message: "Conta sem perfil no banco.",
+          message:
+            "Não encontramos seu perfil. Tente criar a conta novamente ou fale com o suporte.",
         });
         return;
       }
@@ -127,7 +129,7 @@ function LoginForm() {
       setStatus({
         kind: "error",
         message:
-          "Conta sem perfil no banco. Cadastre-se novamente ou contate o suporte.",
+          "Não encontramos seu perfil. Tente criar a conta novamente ou fale com o suporte.",
       });
       return;
     }
@@ -195,7 +197,7 @@ function LoginForm() {
           <div className="mt-8 space-y-5" onKeyDown={handleKey}>
             <label className="block">
               <span className="text-sm font-medium text-slate-700">
-                Código TOTP
+                Código de verificação
               </span>
               <input
                 type="text"
@@ -279,7 +281,7 @@ function LoginForm() {
               href="/cliente/acesso"
               className="font-semibold text-slate-700 hover:text-slate-950"
             >
-              Sou cliente - entrar com CPF
+              Sou cliente — entrar com CPF
             </Link>
             <Link
               href="/cadastro"

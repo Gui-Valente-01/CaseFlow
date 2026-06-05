@@ -264,8 +264,5 @@ function translateError(message: string): string {
   if (m.includes("invalid email")) return "Informe um e-mail válido.";
   if (m.includes("password")) return "A senha não foi aceita. Use uma mais forte.";
   if (m.includes("rate")) return "Muitas tentativas. Aguarde um minuto.";
-  if (m.includes("database error")) {
-    return `Erro do banco: ${message}. Verifique se o trigger handle_new_user está instalado (rode docs/schema.sql).`;
-  }
-  return message;
+  return "Não foi possível criar sua conta agora. Tente novamente em instantes.";
 }
