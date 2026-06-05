@@ -43,7 +43,7 @@ export async function updateOrganizationAction(
     })
     .eq("id", profile.organization_id);
 
-  if (error) return { error: error.message };
+  if (error) return { error: "Não foi possível salvar. Tente novamente." };
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/configuracoes");

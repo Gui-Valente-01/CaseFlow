@@ -54,7 +54,7 @@ export async function updateBillingAction(
       billing_email: profile.email,
     });
 
-    if (error) return { error: error.message };
+    if (error) return { error: "Não foi possível atualizar o plano. Tente novamente." };
 
     await recordAudit({
       organizationId: profile.organization_id,
@@ -84,7 +84,7 @@ export async function updateBillingAction(
       billing_email: profile.email,
     });
 
-    if (error) return { error: error.message };
+    if (error) return { error: "Não foi possível atualizar o plano. Tente novamente." };
 
     await recordAudit({
       organizationId: profile.organization_id,
@@ -111,7 +111,7 @@ export async function updateBillingAction(
       billing_email: profile.email,
     });
 
-    if (error) return { error: error.message };
+    if (error) return { error: "Não foi possível atualizar o plano. Tente novamente." };
 
     await recordAudit({
       organizationId: profile.organization_id,

@@ -76,7 +76,7 @@ export function MessageComposer({
     });
     if (!upload.ok || !upload.storagePath) {
       setBusy(false);
-      setUploadError(upload.error ?? "Falha no upload.");
+      setUploadError(upload.error ?? "Falha ao enviar o arquivo.");
       return;
     }
 

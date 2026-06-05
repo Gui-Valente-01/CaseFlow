@@ -68,7 +68,9 @@ export async function bulkImportClientsAction(
   }
 
   const { error } = await supabase.from("clients").insert(toInsert);
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    return { ok: false, error: "Não foi possível importar os clientes. Tente novamente." };
+  }
 
   await recordAudit({
     organizationId: profile.organization_id,

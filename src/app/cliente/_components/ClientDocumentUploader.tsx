@@ -36,7 +36,7 @@ export function ClientDocumentUploader({
     const upload = await uploadDocument({ file, organizationId, caseId });
     if (!upload.ok || !upload.storagePath) {
       setBusy(false);
-      setError(upload.error ?? "Falha no upload.");
+      setError(upload.error ?? "Falha ao enviar o arquivo.");
       if (inputRef.current) inputRef.current.value = "";
       return;
     }

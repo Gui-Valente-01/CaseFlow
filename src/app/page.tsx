@@ -241,7 +241,7 @@ function FeaturesSection() {
     {
       title: "Acesso simples pro cliente",
       description:
-        "Sem convite por e-mail, sem token quebrando. O cliente entra com CPF/CNPJ e senha definidos pelo escritório.",
+        "Sem convite por e-mail e sem link que expira. O cliente entra com CPF/CNPJ e senha definidos pelo escritório.",
       icon: "🔑",
     },
     {

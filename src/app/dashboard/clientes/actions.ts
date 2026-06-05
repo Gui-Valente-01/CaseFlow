@@ -102,7 +102,7 @@ export async function createClientAction(
     .select("id")
     .single();
 
-  if (error) return { error: error.message };
+  if (error) return { error: "Não foi possível salvar. Tente novamente." };
 
   await recordAudit({
     organizationId: profile.organization_id,
@@ -205,7 +205,7 @@ export async function updateClientAction(
     .eq("id", id)
     .eq("organization_id", profile.organization_id);
 
-  if (error) return { error: error.message };
+  if (error) return { error: "Não foi possível salvar. Tente novamente." };
 
   await recordAudit({
     organizationId: profile.organization_id,
@@ -323,7 +323,7 @@ async function provisionClientAuth(input: {
     return {
       ok: false,
       error:
-        "Acesso administrativo do Supabase não configurado. Veja docs/SUPABASE_ADMIN_AUTH.md.",
+        "Não foi possível liberar o acesso do cliente agora. Tente novamente ou fale com o suporte.",
     };
   }
 
@@ -406,7 +406,12 @@ async function provisionClientAuth(input: {
       full_name: input.fullName,
       email: input.email,
     });
-    if (error) return { ok: false, error: error.message };
+    if (error) {
+      return {
+        ok: false,
+        error: "Não foi possível liberar o acesso do cliente agora. Tente novamente.",
+      };
+    }
   }
 
   return { ok: true, userId };
@@ -421,7 +426,7 @@ async function resetClientPassword(input: {
     return {
       ok: false,
       error:
-        "Acesso administrativo do Supabase não configurado. Veja docs/SUPABASE_ADMIN_AUTH.md.",
+        "Não foi possível liberar o acesso do cliente agora. Tente novamente ou fale com o suporte.",
     };
   }
   const admin = getSupabaseAdmin();
@@ -441,7 +446,10 @@ async function resetClientPassword(input: {
     const m = error.message.toLowerCase();
     if (m.includes("password"))
       return { ok: false, error: "Senha não aceita. Tente uma mais forte." };
-    return { ok: false, error: error.message };
+    return {
+      ok: false,
+      error: "Não foi possível definir a senha do cliente. Tente novamente.",
+    };
   }
   return { ok: true };
 }

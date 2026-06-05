@@ -44,7 +44,7 @@ export async function updateAccountAction(
     })
     .eq("id", profile.id);
 
-  if (error) return { error: error.message };
+  if (error) return { error: "Não foi possível salvar. Tente novamente." };
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/conta");

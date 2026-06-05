@@ -48,7 +48,9 @@ export async function uploadDocument(params: {
     contentType: file.type || undefined,
   });
 
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    return { ok: false, error: "Não foi possível enviar o arquivo. Tente novamente." };
+  }
   return { ok: true, storagePath: path };
 }
 
@@ -75,6 +77,8 @@ export async function uploadMessageAttachment(params: {
     contentType: file.type || undefined,
   });
 
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    return { ok: false, error: "Não foi possível enviar o arquivo. Tente novamente." };
+  }
   return { ok: true, storagePath: path };
 }

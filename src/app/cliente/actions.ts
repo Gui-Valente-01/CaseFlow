@@ -91,9 +91,11 @@ export async function recordClientUploadAction(
       .eq("id", documentId)
       .eq("case_id", caseId);
 
-    if (error) return { error: error.message };
+    if (error) {
+      return { error: "Não foi possível registrar o envio. Tente novamente." };
+    }
   } else if (received.error) {
-    return { error: received.error.message };
+    return { error: "Não foi possível registrar o envio. Tente novamente." };
   }
 
   // Snapshot pra audit + e-mail

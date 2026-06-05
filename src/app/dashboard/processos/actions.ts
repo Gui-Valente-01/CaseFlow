@@ -79,7 +79,7 @@ export async function createCaseAction(
     .select("id")
     .single();
 
-  if (error) return { error: error.message };
+  if (error) return { error: "Não foi possível salvar. Tente novamente." };
 
   // Se veio de um template, cria documentos pendentes + tarefas sugeridas.
   const templateId = field(formData, "template_id");
@@ -168,7 +168,7 @@ export async function updateCaseAction(
     .eq("id", id)
     .eq("organization_id", profile.organization_id);
 
-  if (error) return { error: error.message };
+  if (error) return { error: "Não foi possível salvar. Tente novamente." };
 
   await recordAudit({
     organizationId: profile.organization_id,
@@ -457,7 +457,7 @@ export async function createLawyerDocumentAction(
     status: "received",
   });
 
-  if (error) return { error: error.message };
+  if (error) return { error: "Não foi possível salvar. Tente novamente." };
 
   revalidatePath("/dashboard");
   revalidatePath(`/dashboard/processos/${caseId}`);
