@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { friendlyAuthError } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 
 type Status =
@@ -29,7 +30,7 @@ export function TwoFactorPanel() {
   async function refresh() {
     const { data, error } = await supabase.auth.mfa.listFactors();
     if (error) {
-      setStatus({ kind: "error", message: error.message });
+      setStatus({ kind: "error", message: friendlyAuthError(error.message) });
       return;
     }
     const totp = data.totp?.find((f) => f.status === "verified");
@@ -58,7 +59,7 @@ export function TwoFactorPanel() {
       if (error || !data) {
         setStatus({
           kind: "error",
-          message: error?.message ?? "Falha ao iniciar 2FA.",
+          message: friendlyAuthError(error?.message),
         });
         return;
       }
@@ -79,7 +80,7 @@ export function TwoFactorPanel() {
     if (cleaned.length !== 6) {
       setStatus({
         kind: "error",
-        message: "Digite os 6 dígitos do código TOTP.",
+        message: "Digite os 6 dígitos do código.",
       });
       return;
     }
@@ -91,7 +92,7 @@ export function TwoFactorPanel() {
       if (challenge.error || !challenge.data) {
         setStatus({
           kind: "error",
-          message: challenge.error?.message ?? "Falha no desafio.",
+          message: friendlyAuthError(challenge.error?.message),
         });
         return;
       }

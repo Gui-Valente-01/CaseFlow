@@ -71,7 +71,7 @@ function friendlySignupError(message: string): string {
   if (m.includes("invalid email")) return "Informe um e-mail válido.";
   if (m.includes("password")) return "A senha não foi aceita. Use uma mais forte.";
   if (m.includes("rate")) return "Muitas tentativas. Aguarde um minuto.";
-  return message;
+  return "Não foi possível concluir o cadastro. Tente novamente.";
 }
 
 export function friendlyLoginError(message?: string): string {
@@ -80,5 +80,26 @@ export function friendlyLoginError(message?: string): string {
   if (m.includes("invalid login credentials")) return "E-mail ou senha incorretos.";
   if (m.includes("email not confirmed")) return "Confirme seu e-mail antes de entrar.";
   if (m.includes("too many")) return "Muitas tentativas. Aguarde um minuto.";
-  return message;
+  return "Não foi possível entrar. Tente novamente.";
+}
+
+/**
+ * Traduz erros do Supabase Auth (troca de senha, 2FA, sessão) para um texto
+ * amigável em português. Evita expor a mensagem técnica em inglês ao usuário.
+ */
+export function friendlyAuthError(message?: string): string {
+  if (!message) return "Algo deu errado. Tente novamente.";
+  const m = message.toLowerCase();
+  if (m.includes("different from the old") || m.includes("should be different"))
+    return "A nova senha precisa ser diferente da atual.";
+  if (m.includes("at least") && m.includes("password"))
+    return `A senha é muito curta. Use pelo menos 8 caracteres.`;
+  if (m.includes("password")) return "A senha não foi aceita. Use uma mais forte.";
+  if (m.includes("rate") || m.includes("too many"))
+    return "Muitas tentativas. Aguarde um minuto e tente de novo.";
+  if (m.includes("reauthentication") || m.includes("aal"))
+    return "Por segurança, entre de novo antes de fazer essa alteração.";
+  if (m.includes("session") || m.includes("jwt") || m.includes("expired"))
+    return "Sua sessão expirou. Entre novamente.";
+  return "Não foi possível concluir a ação. Tente novamente.";
 }

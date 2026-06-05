@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import PasswordInput from "@/components/PasswordInput";
+import { friendlyAuthError } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 
 type Status =
@@ -33,7 +34,7 @@ export function PasswordForm() {
     setStatus({ kind: "loading" });
     const { error } = await supabase.auth.updateUser({ password });
     if (error) {
-      setStatus({ kind: "error", message: error.message });
+      setStatus({ kind: "error", message: friendlyAuthError(error.message) });
       return;
     }
     setPassword("");
