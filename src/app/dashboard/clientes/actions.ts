@@ -149,7 +149,7 @@ export async function updateClientAction(
     .maybeSingle();
 
   if (!existing) {
-    return { error: "Cliente não encontrado nesta organização." };
+    return { error: "Cliente não encontrado neste escritório." };
   }
 
   let profileId = existing.profile_id as string | null;
@@ -331,7 +331,7 @@ async function provisionClientAuth(input: {
   if (!admin) {
     return {
       ok: false,
-      error: "Não foi possível inicializar o cliente administrativo do Supabase.",
+      error: "Não foi possível liberar o acesso do cliente agora. Tente novamente.",
     };
   }
 
@@ -428,7 +428,7 @@ async function resetClientPassword(input: {
   if (!admin) {
     return {
       ok: false,
-      error: "Não foi possível inicializar o cliente administrativo do Supabase.",
+      error: "Não foi possível liberar o acesso do cliente agora. Tente novamente.",
     };
   }
 

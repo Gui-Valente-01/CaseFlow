@@ -26,15 +26,15 @@ export async function createStripeCheckoutAction(
   void _formData;
 
   const profile = await getCurrentProfile();
-  if (!profile) return { error: "Sessao expirada." };
+  if (!profile) return { error: "Sessão expirada." };
   if (profile.role !== "owner") {
-    return { error: "Apenas o dono do escritorio pode assinar o plano." };
+    return { error: "Apenas o dono do escritório pode assinar o plano." };
   }
 
   if (!isStripeCheckoutConfigured()) {
     return {
       error:
-        "Stripe ainda nao configurado. Defina STRIPE_SECRET_KEY e STRIPE_PRICE_ID_ESSENTIAL.",
+        "O pagamento online ainda não está disponível. Fale com o suporte.",
     };
   }
 
@@ -42,11 +42,15 @@ export async function createStripeCheckoutAction(
   const admin = getSupabaseAdmin();
   const priceId = process.env.STRIPE_PRICE_ID_ESSENTIAL;
 
-  if (!stripe || !priceId) return { error: "Stripe nao esta pronto." };
-  if (!admin) {
+  if (!stripe || !priceId) {
     return {
       error:
-        "SUPABASE_SERVICE_ROLE_KEY nao configurada. Ela e necessaria para salvar o cliente Stripe.",
+        "O pagamento online ainda não está disponível. Tente mais tarde.",
+    };
+  }
+  if (!admin) {
+    return {
+      error: "Não foi possível iniciar a assinatura agora. Tente novamente.",
     };
   }
 
@@ -56,7 +60,9 @@ export async function createStripeCheckoutAction(
     .eq("id", profile.organization_id)
     .maybeSingle();
 
-  if (orgError) return { error: orgError.message };
+  if (orgError) {
+    return { error: "Não foi possível iniciar a assinatura agora. Tente novamente." };
+  }
 
   const billing = await getOrganizationBilling(profile.organization_id);
   let customerId =
@@ -109,7 +115,7 @@ export async function createStripeCheckoutAction(
   });
 
   if (!session.url) {
-    return { error: "Stripe nao retornou a URL do checkout." };
+    return { error: "Não foi possível abrir o pagamento. Tente novamente." };
   }
 
   await recordAudit({

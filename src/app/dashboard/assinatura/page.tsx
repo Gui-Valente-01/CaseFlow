@@ -27,7 +27,7 @@ export default async function AssinaturaPage() {
     <>
       <Header
         title="Assinatura"
-        subtitle="Status comercial do seu escritorio e caminhos para regularizar a assinatura."
+        subtitle="Situação da sua assinatura e como regularizar, se precisar."
         secondaryLabel="Minha conta"
         secondaryHref="/dashboard/conta"
       />

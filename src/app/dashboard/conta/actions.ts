@@ -55,9 +55,9 @@ export async function deleteAccountAndOrganizationAction(
   formData: FormData
 ): Promise<DeleteAccountState> {
   const profile = await getCurrentProfile();
-  if (!profile) return { error: "Sessao expirada." };
+  if (!profile) return { error: "Sessão expirada." };
   if (profile.role !== "owner") {
-    return { error: "Apenas o dono do escritorio pode excluir a conta." };
+    return { error: "Apenas o dono do escritório pode excluir a conta." };
   }
 
   const password = (formData.get("password") as string | null) ?? "";
@@ -67,7 +67,7 @@ export async function deleteAccountAndOrganizationAction(
   if (!admin) {
     return {
       error:
-        "SUPABASE_SERVICE_ROLE_KEY nao esta configurada. Sem ela nao da para remover o usuario do Auth.",
+        "Não foi possível excluir a conta agora. Tente novamente em instantes ou fale com o suporte.",
     };
   }
 
@@ -125,7 +125,7 @@ export async function deleteAccountAndOrganizationAction(
   if (authError) {
     return {
       error:
-        "O escritorio foi removido, mas houve falha ao excluir o usuario do Auth. Remova manualmente no Supabase.",
+        "Os dados do escritório foram removidos, mas houve uma falha ao finalizar a exclusão do seu login. Fale com o suporte para concluir.",
     };
   }
 

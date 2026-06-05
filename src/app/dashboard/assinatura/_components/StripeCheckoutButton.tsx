@@ -62,7 +62,7 @@ export function StripeCheckoutButton({ configured, isOwner, mode }: Props) {
 
 function formatStripeMode(mode: string) {
   if (mode === "test") return "teste";
-  if (mode === "live") return "producao";
-  if (mode === "missing") return "nao configurado";
+  if (mode === "live") return "produção";
+  if (mode === "missing") return "não configurado";
   return "desconhecido";
 }

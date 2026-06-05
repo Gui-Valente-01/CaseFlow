@@ -40,16 +40,16 @@ export function PrivacyDataPanel({ isOwner }: Props) {
           className="inline-flex h-10 items-center justify-center rounded-lg bg-slate-950 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
         >
           {isOwner
-            ? "Exportar dados do escritorio"
+            ? "Exportar dados do escritório"
             : "Exportar meus dados"}
         </a>
 
         {isOwner ? (
           <ConfirmDialog
-            triggerLabel="Excluir minha conta e escritorio"
+            triggerLabel="Excluir minha conta e escritório"
             triggerTone="danger"
-            title="Excluir conta e escritorio?"
-            description="Todos os dados do escritorio serao removidos em cascata: clientes, processos, documentos, mensagens e tarefas. Esta acao nao pode ser desfeita."
+            title="Excluir conta e escritório?"
+            description="Todos os dados do escritório serão removidos em cascata: clientes, processos, documentos, mensagens e tarefas. Esta ação não pode ser desfeita."
             confirmLabel="Excluir definitivamente"
             cancelLabel="Cancelar"
             confirmWord="EXCLUIR"

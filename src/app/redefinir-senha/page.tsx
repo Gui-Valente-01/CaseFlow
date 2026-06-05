@@ -29,7 +29,7 @@ export default function RedefinirSenhaPage() {
     }
 
     if (password !== confirm) {
-      setStatus({ kind: "error", message: "As senhas nao coincidem." });
+      setStatus({ kind: "error", message: "As senhas não coincidem." });
       return;
     }
 

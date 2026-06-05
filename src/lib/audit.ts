@@ -108,7 +108,7 @@ const ACTION_LABEL: Record<string, string> = {
   "invitation.revoked": "Convite revogado",
   "org.updated": "Dados do escritório atualizados",
   "account.updated": "Dados pessoais atualizados",
-  "account.deleted": "Conta e escritorio excluidos",
+  "account.deleted": "Conta e escritório excluídos",
   "data.exported": "Dados exportados",
   "mfa.enrolled": "2FA ativado",
   "mfa.disabled": "2FA desativado",
