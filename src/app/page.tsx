@@ -70,7 +70,7 @@ function Hero() {
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border border-teal-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-teal-700">
               <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
-              SaaS jurídico
+              Para advogados e escritórios
             </span>
             <h1 className="mt-5 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
               O portal que coloca seu escritório no controle do processo.
@@ -95,9 +95,9 @@ function Hero() {
               </Link>
             </div>
             <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-500">
-              <Check>Sem cartão de crédito</Check>
               <Check>Setup em minutos</Check>
-              <Check>Português brasileiro</Check>
+              <Check>Em português</Check>
+              <Check>Cancela quando quiser</Check>
             </ul>
           </div>
 
@@ -476,22 +476,22 @@ function ChatRow({
 function TestimonialsSection() {
   const items = [
     {
-      quote:
-        "Os clientes pararam de ligar pedindo update. Quando vão ver, já está tudo no portal — e a gente sobe documento aprovado na hora.",
-      name: "Dra. Helena R.",
-      role: "Direito de família, Belo Horizonte",
+      title: "Advogado solo",
+      description:
+        "Saia da planilha e do WhatsApp. Cliente, processo, documento e conversa num lugar só — sem perder prazo nem anexo.",
+      icon: "⚖️",
     },
     {
-      quote:
-        "Comecei sozinho com uma planilha. Em 3 meses ganhei mais 2 clientes que cabiam no CaseFlow tranquilo — sem precisar de software de R$ 500/mês.",
-      name: "Dr. Tiago M.",
-      role: "Trabalhista, Curitiba",
+      title: "Banca pequena",
+      description:
+        "Equipe enxuta acompanhando vários processos ao mesmo tempo, cada um com seu próximo passo sempre à vista.",
+      icon: "👥",
     },
     {
-      quote:
-        "Cabe no celular do cliente, cabe no meu Mac, cabe no PC do escritório. Acabou aquela história de e-mail com anexo de 30MB.",
-      name: "Dra. Carolina P.",
-      role: "Consumidor, Recife",
+      title: "Atendimento ao cliente",
+      description:
+        "O cliente acompanha o processo pelo portal e para de ligar pedindo atualização. Você responde uma vez, ele enxerga.",
+      icon: "🤝",
     },
   ];
 
@@ -500,36 +500,35 @@ function TestimonialsSection() {
       <div className="mx-auto max-w-6xl px-5 sm:px-6 lg:px-8">
         <div className="max-w-2xl">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">
-            Quem já usa
+            Para quem é
           </p>
           <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
-            Escritórios pequenos, resultados grandes.
+            Feito para quem advoga sozinho ou em banca pequena.
           </h2>
           <p className="mt-3 text-base leading-7 text-slate-600">
-            Depoimentos de advogados solos e bancas pequenas que rodam o
-            dia-a-dia com CaseFlow.
+            Sem o peso (nem o preço) dos sistemas grandes de gestão jurídica.
+            Foco no que o dia a dia do escritório realmente usa.
           </p>
         </div>
 
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((t, i) => (
+          {items.map((t) => (
             <article
-              key={i}
+              key={t.title}
               className="flex flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
             >
-              <p
+              <div
                 aria-hidden
-                className="text-3xl font-serif leading-none text-teal-700"
+                className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-50 text-xl"
               >
-                &ldquo;
-              </p>
-              <p className="mt-2 flex-1 text-sm leading-6 text-slate-700">
-                {t.quote}
-              </p>
-              <div className="mt-4 border-t border-slate-100 pt-3">
-                <p className="text-sm font-semibold text-slate-900">{t.name}</p>
-                <p className="text-xs text-slate-500">{t.role}</p>
+                {t.icon}
               </div>
+              <h3 className="mt-4 text-lg font-semibold text-slate-950">
+                {t.title}
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-slate-700">
+                {t.description}
+              </p>
             </article>
           ))}
         </div>
@@ -632,7 +631,7 @@ function FaqSection() {
     },
     {
       q: "Onde ficam os documentos?",
-      a: "Armazenados em Supabase Storage, com link de download protegido e geração de URL temporária a cada acesso.",
+      a: "Em armazenamento em nuvem seguro, com download protegido por link temporário que expira a cada acesso.",
     },
     {
       q: "Tem limite de clientes ou processos?",
@@ -689,8 +688,8 @@ function CtaBanner() {
           Comece em menos de 5 minutos.
         </h2>
         <p className="mx-auto mt-3 max-w-xl text-base leading-7 text-slate-600">
-          Crie a conta, cadastre o primeiro cliente e libere o portal. Sem
-          cartão, sem instalação.
+          Crie a conta, cadastre o primeiro cliente e libere o portal. Direto
+          no navegador, sem instalação.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Link 
