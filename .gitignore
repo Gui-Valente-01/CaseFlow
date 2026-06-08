@@ -43,3 +43,6 @@ next-env.d.ts
 
 # supabase CLI temp
 supabase/.temp
+
+# backups locais do Storage (nunca versionar — dados de cliente)
+storage-backups/

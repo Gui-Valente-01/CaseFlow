@@ -159,9 +159,22 @@ do processo, "Atualizar andamentos".
 
 - **Banco**: Supabase faz backup diário automático no plano Pro. No plano
   free, exporte manualmente em **Settings → Database → Backups**.
-- **Storage**: arquivos do bucket `documents` precisam de backup separado.
-  Use a CLI ou o painel pra baixar periodicamente, especialmente antes
-  de mudanças grandes.
+- **Storage**: arquivos do bucket `documents` (documentos jurídicos dos
+  clientes) precisam de backup separado do banco. Use o script pronto:
+
+  ```bash
+  npm run backup:storage
+  ```
+
+  Baixa o bucket inteiro pra `../storage-backups/documents-AAAAMMDD-HHmmss/`
+  (fora do app/git), preservando a estrutura de pastas e gravando um
+  `manifest.json`. Lê as credenciais do `.env.local`
+  (`NEXT_PUBLIC_SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`). Destino
+  configurável via env `BACKUP_DIR`.
+
+  Rode periodicamente (semanal) e sempre antes de mudanças grandes. Pra
+  automatizar no Windows: agende `npm run backup:storage` no Agendador de
+  Tarefas. Guarde uma cópia fora da máquina (Drive, HD externo).
 
 ## 8. Custos esperados (escritório pequeno)
 
