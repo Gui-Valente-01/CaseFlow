@@ -10,6 +10,7 @@ import {
   sendEmail,
 } from "@/lib/email";
 import { isLegalStaff } from "@/lib/permissions";
+import { syncCaseMovements } from "@/lib/court-sync";
 import {
   createSupabaseServerClient,
   getCurrentProfile,
@@ -271,6 +272,68 @@ export async function createCaseUpdateAction(formData: FormData): Promise<void> 
 
   revalidatePath("/dashboard");
   revalidatePath(`/dashboard/processos/${caseId}`);
+}
+
+// =====================================================================
+// Sincronização de andamentos com o tribunal (DataJud)
+// =====================================================================
+
+export interface SyncActionState {
+  ok?: boolean;
+  message?: string;
+}
+
+/**
+ * Puxa os andamentos do tribunal pelo número do processo e grava os
+ * novos (deduplicados). Pensada pro botão "Atualizar andamentos" via
+ * useActionState — devolve uma mensagem amigável pra mostrar inline.
+ */
+export async function syncCaseMovementsAction(
+  _prev: SyncActionState,
+  formData: FormData
+): Promise<SyncActionState> {
+  const profile = await getCurrentProfile();
+  if (!profile) return { ok: false, message: "Sessão expirada." };
+  if (!isLegalStaff(profile))
+    return { ok: false, message: "Acesso restrito ao escritório." };
+
+  const caseId = field(formData, "case_id");
+  if (!caseId) return { ok: false, message: "Processo inválido." };
+  if (!(await canAccessCase(caseId, profile.organization_id)))
+    return { ok: false, message: "Processo não encontrado." };
+
+  const result = await syncCaseMovements(caseId);
+
+  await recordAudit({
+    organizationId: profile.organization_id,
+    actorId: profile.id,
+    actorName: profile.full_name,
+    action: "case.court_sync",
+    entityType: "case",
+    entityId: caseId,
+    entityLabel: result.ok
+      ? `${result.added} novo(s) de ${result.total}`
+      : `erro: ${result.code ?? "desconhecido"}`,
+  });
+
+  revalidatePath(`/dashboard/processos/${caseId}`);
+
+  if (!result.ok) {
+    return { ok: false, message: result.error ?? "Falha ao sincronizar." };
+  }
+  if (result.added === 0) {
+    return {
+      ok: true,
+      message:
+        result.total === 0
+          ? "Nenhum andamento encontrado no tribunal."
+          : "Tudo em dia — nenhum andamento novo.",
+    };
+  }
+  return {
+    ok: true,
+    message: `${result.added} andamento(s) novo(s) importado(s).`,
+  };
 }
 
 async function notifyClientOfCaseUpdate(

@@ -360,6 +360,9 @@ export interface CaseDetail {
   status: string;
   statusLabel: string;
   next_step: string | null;
+  last_synced_at: string | null;
+  last_sync_error: string | null;
+  court_sync_enabled: boolean;
 }
 
 export async function getCaseById(
@@ -370,7 +373,7 @@ export async function getCaseById(
   const { data } = await supabase
     .from("cases")
     .select(
-      "id, organization_id, client_id, case_number, title, type, status, next_step, clients(full_name, profile_id)"
+      "id, organization_id, client_id, case_number, title, type, status, next_step, last_synced_at, last_sync_error, court_sync_enabled, clients(full_name, profile_id)"
     )
     .eq("id", id)
     .eq("organization_id", organizationId)
@@ -388,6 +391,9 @@ export async function getCaseById(
     status: data.status,
     statusLabel: translateCaseStatus(data.status),
     next_step: data.next_step,
+    last_synced_at: data.last_synced_at ?? null,
+    last_sync_error: data.last_sync_error ?? null,
+    court_sync_enabled: data.court_sync_enabled ?? true,
   };
 }
 
@@ -445,6 +451,36 @@ export async function getCaseUpdates(caseId: string): Promise<CaseUpdateItem[]> 
     description: row.description ?? "",
     author: extractProfileName(row.profiles),
     createdAt: row.created_at,
+  }));
+}
+
+/**
+ * Andamentos oficiais vindos do tribunal (DataJud), gravados em
+ * case_movements pela sincronização. Separados da linha do tempo manual
+ * (case_updates). Ordenados do mais recente pro mais antigo.
+ */
+export interface CaseMovementItem {
+  id: string;
+  code: number | null;
+  name: string;
+  occurredAt: string | null;
+}
+
+export async function getCaseMovements(
+  caseId: string
+): Promise<CaseMovementItem[]> {
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase
+    .from("case_movements")
+    .select("id, code, name, occurred_at")
+    .eq("case_id", caseId)
+    .order("occurred_at", { ascending: false, nullsFirst: false });
+
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    code: row.code,
+    name: row.name,
+    occurredAt: row.occurred_at,
   }));
 }
 

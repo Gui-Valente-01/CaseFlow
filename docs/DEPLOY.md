@@ -31,6 +31,10 @@ que aceite Node (Railway, Fly.io, AWS, etc.).
    - `docs/migration-v15-privacy-audit-log.sql`
    - `docs/migration-v16-disable-rls-rollback.sql` (rollback da v13 — deixa o
      produto funcional enquanto o RLS não for testado em staging)
+   - `docs/migration-v17-rls-reenable.sql`
+   - `docs/migration-v18-document-instructions.sql`
+   - `docs/migration-v19-rate-limit.sql`
+   - `docs/migration-v20-court-movements.sql` (andamentos do tribunal / DataJud)
 3. Anote os valores em **Project Settings → API**:
    - `URL`
    - `anon` key
@@ -58,9 +62,15 @@ que aceite Node (Railway, Fly.io, AWS, etc.).
    | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `pk_live_...` em producao / `pk_test_...` em staging | Production + Preview |
    | `STRIPE_WEBHOOK_SECRET` | `whsec_...` do endpoint do ambiente | Production + Preview |
    | `STRIPE_PRICE_ID_ESSENTIAL` | `price_...` do plano mensal | Production + Preview |
+   | `DATAJUD_API_KEY` | chave pública do CNJ (consulta de andamentos) | Production + Preview |
+   | `CRON_SECRET` | valor aleatório forte (liga o job de andamentos) | Production só |
 
    Sem `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN`, o Sentry nao envia eventos e
    nao quebra o build.
+
+   Sem `DATAJUD_API_KEY`, a consulta de andamentos do tribunal fica inerte
+   (o botão avisa "não configurado"). A chave pública é obtida em
+   https://datajud-wiki.cnj.jus.br/api-publica/acesso .
 
    Sem `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` ou
    `STRIPE_PRICE_ID_ESSENTIAL`, o checkout automatico fica inerte e o pagamento
@@ -103,6 +113,27 @@ Sem isso, convites de equipe e notificações por e-mail não saem.
 
 > Pra teste rápido sem domínio: usa `onboarding@resend.dev` como
 > `EMAIL_FROM` — porém só envia pro e-mail dono da conta Resend.
+
+## 4b. Andamentos automáticos do tribunal (DataJud)
+
+Puxa os andamentos processuais pelo número do processo (fonte: API pública
+do CNJ, gratuita). Migration necessária: `docs/migration-v20-court-movements.sql`.
+
+**Botão manual** (já funciona só com `DATAJUD_API_KEY` configurada): no detalhe
+do processo, "Atualizar andamentos".
+
+**Job automático diário** (opcional):
+1. Defina `CRON_SECRET` nas env vars do Vercel (valor aleatório forte).
+2. O `vercel.json` (na raiz) já agenda `/api/cron/sync-cases` 1x/dia às
+   `0 11 * * *` (11h UTC = 8h de Brasília). A Vercel envia o header
+   `Authorization: Bearer <CRON_SECRET>` automaticamente.
+3. Sem `CRON_SECRET`, a rota responde 501 (desligada) — segura por padrão.
+
+> Teste manual do job:
+> `curl -H "Authorization: Bearer SEU_SECRET" https://seudominio.com/api/cron/sync-cases`
+>
+> Plano Hobby da Vercel permite cron 1x/dia. Para mais frequência, use o
+> plano Pro e ajuste o `schedule`.
 
 ## 5. Checklist pós-deploy
 

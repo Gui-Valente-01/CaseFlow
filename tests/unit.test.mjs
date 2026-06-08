@@ -86,3 +86,117 @@ test("Stripe checkout e webhook ficam preparados sem obrigar env local", async (
   assert.match(envExample, /STRIPE_PRICE_ID_ESSENTIAL=/);
   assert.match(readme, /STRIPE_WEBHOOK_SECRET/);
 });
+
+test("integracao DataJud: client puro, parser CNJ e mapa de tribunais", async () => {
+  const datajud = await file("src/lib/datajud.ts");
+  const envExample = await file(".env.local.example");
+
+  // Autenticacao e endpoint corretos da API publica do CNJ.
+  assert.match(datajud, /api-publica\.datajud\.cnj\.jus\.br/);
+  assert.match(datajud, /APIKey \$\{apiKey\}/);
+  assert.match(datajud, /numeroProcesso/);
+
+  // Parser do numero unico CNJ (20 digitos) e mapeamento por segmento.
+  assert.match(datajud, /digits\.length !== 20/);
+  assert.match(datajud, /resolveDatajudEndpoint/);
+  assert.match(datajud, /tjsp/);
+  assert.match(datajud, /trf\$\{Number\(court\)\}/);
+  assert.match(datajud, /trt\$\{Number\(court\)\}/);
+
+  // Falha de forma honesta quando nao configurado / nao suportado.
+  assert.match(datajud, /"not_configured"/);
+  assert.match(datajud, /"unsupported_court"/);
+  assert.match(datajud, /"not_found"/);
+
+  // Hash de deduplicacao deterministico.
+  assert.match(datajud, /export function movementHash/);
+
+  // Variavel de ambiente documentada.
+  assert.match(envExample, /DATAJUD_API_KEY=/);
+});
+
+test("integracao DataJud: sync grava deduplicado e nao acessa banco no client", async () => {
+  const datajud = await file("src/lib/datajud.ts");
+  const sync = await file("src/lib/court-sync.ts");
+  const migration = await file("docs/migration-v20-court-movements.sql");
+
+  // O client puro NAO deve tocar no banco (separacao de responsabilidades).
+  assert.doesNotMatch(datajud, /supabase/i);
+
+  // A orquestracao usa admin e faz upsert ignorando duplicatas.
+  assert.match(sync, /getSupabaseAdmin/);
+  assert.match(sync, /case_movements/);
+  assert.match(sync, /onConflict: "case_id,external_hash"/);
+  assert.match(sync, /ignoreDuplicates: true/);
+  assert.match(sync, /last_synced_at/);
+  assert.match(sync, /last_sync_error/);
+
+  // Migration cria a tabela com unique de dedup e colunas de controle.
+  assert.match(migration, /create table if not exists public\.case_movements/);
+  assert.match(migration, /unique \(case_id, external_hash\)/);
+  assert.match(migration, /court_sync_enabled/);
+});
+
+test("integracao DataJud: UI do processo mostra andamentos e botao", async () => {
+  const page = await file("src/app/dashboard/processos/[id]/page.tsx");
+  const panel = await file(
+    "src/app/dashboard/processos/[id]/_components/CourtSyncPanel.tsx"
+  );
+  const actions = await file("src/app/dashboard/processos/actions.ts");
+  const queries = await file("src/lib/queries.ts");
+
+  // A pagina busca os movimentos e renderiza o painel.
+  assert.match(page, /getCaseMovements/);
+  assert.match(page, /<CourtSyncPanel/);
+
+  // Painel: botao de atualizar via useActionState e lista de andamentos.
+  assert.match(panel, /Atualizar andamentos/);
+  assert.match(panel, /useActionState/);
+  assert.match(panel, /syncCaseMovementsAction/);
+
+  // Action protege por papel e revalida a pagina do processo.
+  assert.match(actions, /export async function syncCaseMovementsAction/);
+  assert.match(actions, /isLegalStaff\(profile\)/);
+  assert.match(actions, /canAccessCase/);
+  assert.match(actions, /revalidatePath\(`\/dashboard\/processos\/\$\{caseId\}`\)/);
+
+  // Query nova de movimentos existe e ordena por data desc.
+  assert.match(queries, /export async function getCaseMovements/);
+  assert.match(queries, /from\("case_movements"\)/);
+});
+
+test("integracao DataJud: cron protegido por secret e em lote", async () => {
+  const route = await file("src/app/api/cron/sync-cases/route.ts");
+  const sync = await file("src/lib/court-sync.ts");
+  const envExample = await file(".env.local.example");
+
+  // Rota exige Bearer CRON_SECRET e fica desligada (501) sem o secret.
+  assert.match(route, /CRON_SECRET/);
+  assert.match(route, /Bearer \$\{secret\}/);
+  assert.match(route, /status: 501/);
+  assert.match(route, /status: 401/);
+  assert.match(route, /syncPendingCases/);
+
+  // Lote prioriza os mais antigos e respeita um limite por execucao.
+  assert.match(sync, /export async function syncPendingCases/);
+  assert.match(sync, /court_sync_enabled/);
+  assert.match(sync, /ascending: true, nullsFirst: true/);
+
+  // Variavel documentada.
+  assert.match(envExample, /CRON_SECRET=/);
+});
+
+test("integracao DataJud: vercel.json agenda o cron de andamentos", async () => {
+  const vercel = JSON.parse(await file("vercel.json"));
+  const deploy = await file("docs/DEPLOY.md");
+
+  assert.ok(Array.isArray(vercel.crons), "vercel.json deve ter crons[]");
+  const cron = vercel.crons.find((c) => c.path === "/api/cron/sync-cases");
+  assert.ok(cron, "deve agendar /api/cron/sync-cases");
+  assert.match(cron.schedule, /^[\d*/, -]+$/, "schedule deve ser cron valido");
+
+  // Deploy documenta a migration v20 e a variavel do cron.
+  assert.match(deploy, /migration-v20-court-movements/);
+  assert.match(deploy, /CRON_SECRET/);
+  assert.match(deploy, /DATAJUD_API_KEY/);
+});

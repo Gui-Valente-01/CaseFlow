@@ -9,6 +9,7 @@ import {
   getCaseById,
   getCaseDocuments,
   getCaseMessages,
+  getCaseMovements,
   getCasePrivateNotes,
   getCaseTasks,
   getCaseUpdates,
@@ -30,6 +31,7 @@ import {
   updateCasePrivateNotesAction,
 } from "../actions";
 import { LawyerDocumentUploader } from "./_components/LawyerDocumentUploader";
+import { CourtSyncPanel } from "./_components/CourtSyncPanel";
 import { CaseRealtimeListener } from "@/components/CaseRealtimeListener";
 import { FlashBanner } from "@/components/FlashBanner";
 import { SubmitButton } from "@/components/SubmitButton";
@@ -66,10 +68,11 @@ export default async function ProcessoDetailPage({
   const profile = await getCurrentProfile();
   if (!profile) return null;
 
-  const [c, clients, updates, documents, privateNotes, tasks] = await Promise.all([
+  const [c, clients, updates, movements, documents, privateNotes, tasks] = await Promise.all([
     getCaseById(profile.organization_id, id),
     getClientsForSelect(profile.organization_id),
     getCaseUpdates(id),
+    getCaseMovements(id),
     getCaseDocuments(id),
     getCasePrivateNotes(profile.organization_id, id),
     getCaseTasks(id),
@@ -114,6 +117,13 @@ export default async function ProcessoDetailPage({
 
         <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
           <div className="space-y-6">
+            <CourtSyncPanel
+              caseId={c.id}
+              caseNumber={c.case_number}
+              movements={movements}
+              lastSyncedAt={c.last_synced_at}
+              lastSyncError={c.last_sync_error}
+            />
             <Timeline caseId={c.id} updates={updates} />
             <div id="mensagens">
               <MessageThread

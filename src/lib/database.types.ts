@@ -148,6 +148,60 @@ export type Database = {
           },
         ]
       }
+      case_movements: {
+        Row: {
+          case_id: string
+          code: number | null
+          created_at: string
+          external_hash: string
+          id: string
+          name: string
+          occurred_at: string | null
+          organization_id: string
+          raw: Json | null
+          source: string
+        }
+        Insert: {
+          case_id: string
+          code?: number | null
+          created_at?: string
+          external_hash: string
+          id?: string
+          name: string
+          occurred_at?: string | null
+          organization_id: string
+          raw?: Json | null
+          source?: string
+        }
+        Update: {
+          case_id?: string
+          code?: number | null
+          created_at?: string
+          external_hash?: string
+          id?: string
+          name?: string
+          occurred_at?: string | null
+          organization_id?: string
+          raw?: Json | null
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_movements_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_movements_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       case_updates: {
         Row: {
           author_id: string | null
@@ -194,8 +248,11 @@ export type Database = {
         Row: {
           case_number: string | null
           client_id: string
+          court_sync_enabled: boolean
           created_at: string
           id: string
+          last_sync_error: string | null
+          last_synced_at: string | null
           lawyer_id: string | null
           next_step: string | null
           organization_id: string
@@ -208,8 +265,11 @@ export type Database = {
         Insert: {
           case_number?: string | null
           client_id: string
+          court_sync_enabled?: boolean
           created_at?: string
           id?: string
+          last_sync_error?: string | null
+          last_synced_at?: string | null
           lawyer_id?: string | null
           next_step?: string | null
           organization_id: string
@@ -222,8 +282,11 @@ export type Database = {
         Update: {
           case_number?: string | null
           client_id?: string
+          court_sync_enabled?: boolean
           created_at?: string
           id?: string
+          last_sync_error?: string | null
+          last_synced_at?: string | null
           lawyer_id?: string | null
           next_step?: string | null
           organization_id?: string
