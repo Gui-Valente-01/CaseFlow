@@ -143,7 +143,7 @@ test("integracao DataJud: UI do processo mostra andamentos e botao", async () =>
     "src/app/dashboard/processos/[id]/_components/CourtSyncPanel.tsx"
   );
   const actions = await file("src/app/dashboard/processos/actions.ts");
-  const queries = await file("src/lib/queries.ts");
+  const queries = await file("src/lib/queries/case-content.ts");
 
   // A pagina busca os movimentos e renderiza o painel.
   assert.match(page, /getCaseMovements/);
