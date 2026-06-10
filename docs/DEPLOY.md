@@ -35,6 +35,9 @@ que aceite Node (Railway, Fly.io, AWS, etc.).
    - `docs/migration-v18-document-instructions.sql`
    - `docs/migration-v19-rate-limit.sql`
    - `docs/migration-v20-court-movements.sql` (andamentos do tribunal / DataJud)
+   - `docs/migration-v21-case-movements-rls.sql` (policy de RLS da tabela de
+     andamentos — **obrigatória se o RLS estiver ligado**, senão o painel de
+     andamentos fica vazio)
 3. Anote os valores em **Project Settings → API**:
    - `URL`
    - `anon` key

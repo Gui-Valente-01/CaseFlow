@@ -156,6 +156,10 @@ no mesmo SQL Editor. Hoje há:
   solicitação de documento — **aplicar antes do deploy do código**)
 - `docs/migration-v19-rate-limit.sql` (rate limit por IP no login do cliente;
   o código falha liberado se não aplicada, então a ordem não é crítica)
+- `docs/migration-v20-court-movements.sql` (andamentos do tribunal / DataJud)
+- `docs/migration-v21-case-movements-rls.sql` (**obrigatória com RLS ligado** —
+  sem ela o painel de andamentos fica vazio; testar com
+  `docs/rls-test-case-movements.sql`)
 
 Para deploy em produção, ver [`docs/DEPLOY.md`](./docs/DEPLOY.md).
 
