@@ -9,6 +9,28 @@ Versionamento [SemVer](https://semver.org/lang/pt-BR/).
 
 Mudanças que ainda não viraram release. Vai pro topo quando lançar.
 
+### Corrigido (2026-06-10)
+- **Andamentos do DataJud sempre vazios**: a tabela `case_movements` (v20)
+  ficou com RLS ligado e nenhuma policy depois que a v17 religou o RLS do
+  projeto — deny-all silencioso pro papel `authenticated`. Migration
+  `v21-case-movements-rls` cria a policy de SELECT (`can_access_case`),
+  validada com `docs/rls-test-case-movements.sql` (aplicada em produção).
+
+### Adicionado (2026-06-10)
+- Testes de comportamento (`tests/behavior.test.mjs`): parser CNJ, mapa de
+  tribunais, hash de deduplicação e helpers de apresentação, importando os
+  módulos TypeScript direto (Node 24 type stripping). Rodam no `npm test`.
+- Smoke tests no CI: o workflow sobe `next start` com env placeholder e
+  valida rotas públicas + redirect do dashboard.
+- `scripts/apply-sql.mjs`: aplica .sql no Supabase via Management API
+  (token do `.env.local`), com saída de erro legível.
+
+### Alterado (2026-06-10)
+- `src/lib/queries.ts` (37 KB) dividido por domínio em `src/lib/queries/`
+  (clients, cases, case-content, dashboard, agenda, client-portal, shared)
+  com barrel `index.ts` — a API pública `@/lib/queries` não mudou.
+- CI atualizado pra Node 24 (necessário pros testes de comportamento).
+
 ### Adicionado
 - Migrations `v12-rls-rpc-helpers` e `v13-production-rls-policies` para
   preparar RLS estrito em tabelas e Storage.
