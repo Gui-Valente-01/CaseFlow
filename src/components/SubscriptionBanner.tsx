@@ -1,5 +1,6 @@
 import Link from "next/link";
 import {
+  BILLING_PAUSED,
   isSubscriptionUsable,
   translateSubscriptionStatus,
   type OrganizationBilling,
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function SubscriptionBanner({ billing }: Props) {
+  if (BILLING_PAUSED) return null;
   if (!billing.columnsReady) {
     return (
       <Banner tone="amber">

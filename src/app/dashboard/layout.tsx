@@ -5,6 +5,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { SubscriptionBanner } from "@/components/SubscriptionBanner";
 import { TrialBanner } from "@/components/TrialBanner";
 import {
+  BILLING_PAUSED,
   daysUntil,
   getOrganizationBilling,
   isSubscriptionUsable,
@@ -63,7 +64,8 @@ export default async function DashboardLayout({
       <Sidebar />
       <div className="flex-1">
         <SubscriptionBanner billing={billing} />
-        {billing.columnsReady &&
+        {!BILLING_PAUSED &&
+        billing.columnsReady &&
         billing.subscriptionStatus === "trialing" &&
         trialDays !== null &&
         trialDays >= 0 &&

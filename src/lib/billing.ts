@@ -17,6 +17,11 @@ export interface OrganizationBilling {
   columnsReady: boolean;
 }
 
+// TODO: voltar a cobrar — mudar para false quando a apresentação acabar.
+// Enquanto true, ninguém é bloqueado por assinatura e os banners de
+// cobrança ficam ocultos. Nenhum dado de billing é alterado.
+export const BILLING_PAUSED = true;
+
 export const DEFAULT_PLAN = "essential";
 export const LAUNCH_PRICE_BRL = 89;
 
@@ -49,6 +54,7 @@ export function isSubscriptionUsable(
   billing: Pick<OrganizationBilling, "subscriptionStatus" | "trialEndsAt">,
   now = new Date()
 ): boolean {
+  if (BILLING_PAUSED) return true;
   if (billing.subscriptionStatus === "active") return true;
   if (billing.subscriptionStatus === "manual") return true;
   if (billing.subscriptionStatus !== "trialing") return false;
