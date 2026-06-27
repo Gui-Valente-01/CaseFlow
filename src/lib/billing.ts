@@ -17,10 +17,19 @@ export interface OrganizationBilling {
   columnsReady: boolean;
 }
 
-// TODO: voltar a cobrar — mudar para false quando a apresentação acabar.
-// Enquanto true, ninguém é bloqueado por assinatura e os banners de
-// cobrança ficam ocultos. Nenhum dado de billing é alterado.
-export const BILLING_PAUSED = true;
+// Pausa de cobrança (modo "grátis no lançamento"). Enquanto ligado, ninguém
+// é bloqueado por assinatura, os banners de cobrança ficam ocultos e a landing
+// anuncia o plano como gratuito. Nenhum dado de billing é alterado.
+//
+// Controlado pela env var server-only `BILLING_PAUSED` (NÃO use NEXT_PUBLIC:
+// o flag só é lido em código de servidor — billing.ts, layout do dashboard,
+// banners e a landing são server components — então mantê-lo fora do bundle
+// do client é a opção mais segura).
+//
+// Default = pausado. Para VOLTAR A COBRAR, defina `BILLING_PAUSED=false` no
+// ambiente (ex.: Vercel) e refaça o deploy. Qualquer outro valor (ou ausência)
+// mantém o sistema gratuito.
+export const BILLING_PAUSED = process.env.BILLING_PAUSED !== "false";
 
 export const DEFAULT_PLAN = "essential";
 export const LAUNCH_PRICE_BRL = 89;

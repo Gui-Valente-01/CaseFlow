@@ -57,21 +57,35 @@ A aplicação sobe em [http://localhost:3000](http://localhost:3000).
 
 ### Variáveis de ambiente
 
-Crie um arquivo `.env.local` na raiz com:
+Use [`.env.local.example`](./.env.local.example) como base — copie para `.env.local`
+e preencha. O exemplo marca cada variável como `[OBRIGATÓRIA]` ou `[OPCIONAL]`.
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://<seu-projeto>.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key-do-supabase>
-SUPABASE_SERVICE_ROLE_KEY=<service-role-key-do-supabase>
-SENTRY_DSN=
-NEXT_PUBLIC_SENTRY_DSN=
-STRIPE_SECRET_KEY=
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
-STRIPE_WEBHOOK_SECRET=
-STRIPE_PRICE_ID_ESSENTIAL=
-```
+Resumo do que é necessário para **produção**:
 
-Os valores ficam em **Supabase → Project Settings → API**.
+| Variável | Obrigatória? | Sem ela |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` / `_ANON_KEY` | **Sim** | App não conecta ao banco/auth |
+| `SUPABASE_SERVICE_ROLE_KEY` | **Sim** | Cadastro de cliente com senha inicial falha |
+| `NEXT_PUBLIC_SITE_URL` | **Sim** | Links de e-mail/callbacks apontam errado |
+| `RESEND_API_KEY` + `EMAIL_FROM` | Recomendada | Não envia e-mails (convite/recuperação) |
+| `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` | Opcional | Captura de erros vira no-op |
+| `STRIPE_*` | Opcional | Sem checkout automático (cai no PIX manual) |
+| `BILLING_PAUSED` | Opcional | Ausente = sistema gratuito (modo lançamento) |
+| `DATAJUD_API_KEY` | Opcional | Consulta de andamentos desligada |
+| `CRON_SECRET` | Opcional | Job diário de sincronização desligado (501) |
+
+Os valores do Supabase ficam em **Supabase → Project Settings → API**.
+
+> ⚠️ `EMAIL_FROM` precisa usar um domínio **verificado no Resend**. O valor de
+> exemplo (`noreply@seudominio.com`) é só placeholder e não entrega em produção.
+
+#### Billing / promoção de lançamento (`BILLING_PAUSED`)
+
+`BILLING_PAUSED` é **server-only** (não use `NEXT_PUBLIC`). Ausente ou qualquer
+valor diferente de `false` deixa o sistema **gratuito**: ninguém é bloqueado por
+assinatura, os banners de cobrança somem e a landing anuncia o plano como grátis.
+Para **voltar a cobrar**, defina `BILLING_PAUSED=false` no ambiente (ex.: Vercel)
+e refaça o deploy. Como a landing é estática, a mudança só reflete após novo build.
 
 A `SUPABASE_SERVICE_ROLE_KEY` é necessária para o advogado definir a senha
 inicial do cliente direto no cadastro. Detalhes em
@@ -234,6 +248,23 @@ Antes de rodar:
 
 O script (`scripts/gen-types.mjs`) escreve o arquivo em UTF-8 nativo, então
 funciona igual em PowerShell, bash e no CI sem precisar mexer no encoding.
+
+## Solução de problemas
+
+### Next dev instável (`Manifest file is empty`, HMR travado, telas em branco)
+
+Em automação rápida ou após muitas trocas de arquivo, o `next dev` pode deixar
+o cache `.next` num estado inconsistente (ex.: aviso `Manifest file is empty`).
+Costuma ser pontual e some ao reiniciar. Procedimento de recuperação:
+
+1. **Pare** o servidor de dev (Ctrl+C; ou finalize o processo na porta 3000).
+2. **Limpe o cache** do Next (só se reiniciar não resolver):
+   - **PowerShell:** `Remove-Item -Recurse -Force .next`
+   - **bash:** `rm -rf .next`
+3. **Suba de novo:** `npm run dev`.
+
+Se persistir após limpar o `.next`, rode `npm run build` para ver se o erro é
+real (de código) ou só sujeira de cache do dev server.
 
 ## Convenções
 

@@ -7,8 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --test tests/unit.test.mjs tests/behavior.test.mjs",
-    "test:smoke": "node --test tests/smoke.test.mjs",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test tests/unit.test.mjs tests/behavior.test.mjs",
+    "test:smoke": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test tests/smoke.test.mjs",
     "gen:types": "node scripts/gen-types.mjs",
     "backup:storage": "node scripts/backup-storage.mjs"
   },
