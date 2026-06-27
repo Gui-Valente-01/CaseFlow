@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo, LogoMark } from "@/components/Logo";
+import { BILLING_PAUSED, LAUNCH_PRICE_BRL } from "@/lib/billing";
 
 export default function HomePage() {
   return (
@@ -558,10 +559,12 @@ function PricingTeaserSection() {
       <div className="mx-auto max-w-3xl px-5 sm:px-6 lg:px-8">
         <div className="text-center">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-teal-700">
-            Plano único
+            {BILLING_PAUSED ? "Promoção de lançamento" : "Plano único"}
           </p>
           <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
-            Sem surpresa no boleto.
+            {BILLING_PAUSED
+              ? "Grátis enquanto estamos no lançamento."
+              : "Sem surpresa no boleto."}
           </h2>
         </div>
 
@@ -569,13 +572,38 @@ function PricingTeaserSection() {
           <p className="text-xs font-semibold uppercase tracking-wide text-teal-700">
             CaseFlow Essencial
           </p>
-          <div className="mt-2 flex items-baseline gap-1">
-            <span className="text-4xl font-semibold text-slate-950">R$ 89</span>
-            <span className="text-sm text-slate-500">/ mês</span>
-          </div>
-          <p className="mt-2 text-sm text-slate-600">
-            Tudo do produto. Sem upsell escondido. Cancela quando quiser.
-          </p>
+          {BILLING_PAUSED ? (
+            <>
+              <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+                <span className="text-2xl font-semibold text-slate-500 line-through decoration-red-500 decoration-2">
+                  R$ {LAUNCH_PRICE_BRL}
+                  <span className="text-base">/mês</span>
+                </span>
+                <span className="text-4xl font-bold tracking-tight text-teal-600">
+                  Grátis
+                </span>
+                <span className="inline-flex items-center rounded-full bg-red-50 px-2.5 py-1 text-xs font-bold uppercase tracking-wide text-red-600 ring-1 ring-red-200">
+                  100% off
+                </span>
+              </div>
+              <p className="mt-2 text-sm text-slate-600">
+                Tudo do plano Essencial liberado — sem custo e sem cartão de
+                crédito enquanto durar a promoção de lançamento.
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="mt-2 flex items-baseline gap-1">
+                <span className="text-4xl font-semibold text-slate-950">
+                  R$ {LAUNCH_PRICE_BRL}
+                </span>
+                <span className="text-sm text-slate-500">/ mês</span>
+              </div>
+              <p className="mt-2 text-sm text-slate-600">
+                Tudo do produto. Sem upsell escondido. Cancela quando quiser.
+              </p>
+            </>
+          )}
 
           <ul className="mt-6 grid gap-2 sm:grid-cols-2">
             {features.map((f) => (
@@ -599,7 +627,7 @@ function PricingTeaserSection() {
               href="/cadastro"
               className="inline-flex h-11 flex-1 items-center justify-center rounded-lg bg-slate-950 px-6 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 sm:flex-none"
             >
-              Começar grátis por 14 dias
+              {BILLING_PAUSED ? "Criar conta grátis" : "Começar grátis por 14 dias"}
             </Link>
             <Link
               href="#faq"
@@ -611,8 +639,9 @@ function PricingTeaserSection() {
         </div>
 
         <p className="mx-auto mt-4 max-w-md text-center text-[11px] text-slate-500">
-          Preço de lançamento. Reservado pelos primeiros 12 meses para quem
-          assinar agora.
+          {BILLING_PAUSED
+            ? "Promoção de lançamento por tempo limitado. Avisaremos com antecedência antes de cobrar qualquer valor."
+            : "Preço de lançamento. Reservado pelos primeiros 12 meses para quem assinar agora."}
         </p>
       </div>
     </section>
