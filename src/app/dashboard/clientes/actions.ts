@@ -369,11 +369,14 @@ async function provisionClientAuth(input: {
 
   const userId = created.data.user.id;
 
-  const supabase = await createSupabaseServerClient();
-
+  // IMPORTANTE: os passos abaixo mexem no profile/organization do CLIENTE
+  // recém-criado, que nasce numa "org fantasma" (criada pelo trigger). Com a
+  // RLS ligada, o advogado autenticado NÃO enxerga nem altera o profile de
+  // outro usuário, então estes passos precisam do cliente ADMIN (service role)
+  // — usar createSupabaseServerClient() aqui falha silenciosamente sob RLS.
   // 2) Move o profile criado pelo trigger para a organização do escritório
   //    e força a role 'client'.
-  const { data: profile } = await supabase
+  const { data: profile } = await admin
     .from("profiles")
     .select("id, organization_id")
     .eq("id", userId)
@@ -382,7 +385,7 @@ async function provisionClientAuth(input: {
   const ghostOrgId = profile?.organization_id ?? null;
 
   if (profile) {
-    const { error: pUpd } = await supabase
+    const { error: pUpd } = await admin
       .from("profiles")
       .update({
         organization_id: input.organizationId,
@@ -395,11 +398,11 @@ async function provisionClientAuth(input: {
 
     // 3) Limpa a org fantasma criada pelo trigger.
     if (ghostOrgId && ghostOrgId !== input.organizationId) {
-      await supabase.from("organizations").delete().eq("id", ghostOrgId);
+      await admin.from("organizations").delete().eq("id", ghostOrgId);
     }
   } else {
     // O trigger pode estar desligado. Cria o profile na mão.
-    const { error } = await supabase.from("profiles").insert({
+    const { error } = await admin.from("profiles").insert({
       id: userId,
       organization_id: input.organizationId,
       role: "client",
